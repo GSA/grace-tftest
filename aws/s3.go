@@ -42,7 +42,6 @@ func FindS3BucketEncryptionRuleE(region string, name string, matcher func(*s3.Se
 		return nil, err
 	}
 	for _, r := range rules {
-		fmt.Printf("rule: %#v", r)
 		if matcher(r) {
 			return r, nil
 		}
