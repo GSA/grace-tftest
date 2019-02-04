@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	terratest "github.com/gruntwork-io/terratest/modules/aws"
 )
@@ -76,16 +77,16 @@ func GetS3BucketEncryptionRulesE(region string, name string) ([]*s3.ServerSideEn
 // S3BucketExpirationRuleMatcher ... returns a LifecycleRule matcher with the given properties
 func S3BucketExpirationRuleMatcher(status string, method string, date *time.Time, days int64) func(*s3.LifecycleRule) bool {
 	return func(r *s3.LifecycleRule) bool {
-		if strings.ToLower(status) != strings.ToLower(*r.Status) {
+		if !strings.EqualFold(status, aws.StringValue(r.Status)) {
 			return false
 		}
-		if strings.ToLower(method) != strings.ToLower(*r.ID) {
+		if !strings.EqualFold(method, aws.StringValue(r.ID)) {
 			return false
 		}
 		if date != nil && !date.IsZero() && *date != *r.Expiration.Date {
 			return false
 		}
-		if days > 0 && days != *r.Expiration.Days {
+		if days > 0 && days != aws.Int64Value(r.Expiration.Days) {
 			return false
 		}
 		return true

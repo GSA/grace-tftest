@@ -64,17 +64,17 @@ func PolicyStatementMatcher(s *PolicyStatement) func(*PolicyStatement) bool {
 		if len(s.Resource) > 0 && !stringSliceEqual(s.Resource, statement.Resource) {
 			return false
 		}
-		if len(s.Sid) > 0 && strings.ToLower(s.Sid) != strings.ToLower(statement.Sid) {
+		if len(s.Sid) > 0 && !strings.EqualFold(s.Sid, statement.Sid) {
 			return false
 		}
 		if s.Principal != nil &&
-			(strings.ToLower(s.Principal.Type) != strings.ToLower(statement.Principal.Type) ||
+			(strings.EqualFold(s.Principal.Type, statement.Principal.Type) ||
 				!stringSliceEqual(s.Principal.Values, statement.Principal.Values)) {
 			return false
 		}
 		if s.Condition != nil &&
-			(strings.ToLower(s.Condition.Operator) != strings.ToLower(statement.Condition.Operator) ||
-				strings.ToLower(s.Condition.Property) != strings.ToLower(statement.Condition.Property) ||
+			(!strings.EqualFold(s.Condition.Operator, statement.Condition.Operator) ||
+				!strings.EqualFold(s.Condition.Property, statement.Condition.Property) ||
 				!stringSliceEqual(s.Condition.Value, statement.Condition.Value)) {
 			return false
 		}
@@ -248,7 +248,7 @@ func stringSliceEqual(a []string, b []string) bool {
 		return false
 	}
 	for i := 0; i < len(a); i++ {
-		if strings.ToLower(a[i]) != strings.ToLower(b[i]) {
+		if !strings.EqualFold(a[i], b[i]) {
 			return false
 		}
 	}

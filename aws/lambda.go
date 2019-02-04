@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	terratest "github.com/gruntwork-io/terratest/modules/aws"
 )
@@ -14,19 +15,19 @@ import (
 // nolint: gocyclo
 func LambdaFunctionConfigMatcher(roleArn string, handler string, keyArn, runtime string, timeout int64, environment map[string]string) func(*lambda.FunctionConfiguration) bool {
 	return func(c *lambda.FunctionConfiguration) bool {
-		if len(roleArn) > 0 && strings.ToLower(roleArn) != strings.ToLower(*c.Role) {
+		if len(roleArn) > 0 && !strings.EqualFold(roleArn, aws.StringValue(c.Role)) {
 			return false
 		}
-		if len(handler) > 0 && strings.ToLower(handler) != strings.ToLower(*c.Handler) {
+		if len(handler) > 0 && !strings.EqualFold(handler, aws.StringValue(c.Handler)) {
 			return false
 		}
-		if len(keyArn) > 0 && strings.ToLower(keyArn) != strings.ToLower(*c.KMSKeyArn) {
+		if len(keyArn) > 0 && !strings.EqualFold(keyArn, aws.StringValue(c.KMSKeyArn)) {
 			return false
 		}
-		if len(runtime) > 0 && strings.ToLower(runtime) != strings.ToLower(*c.Runtime) {
+		if len(runtime) > 0 && !strings.EqualFold(runtime, aws.StringValue(c.Runtime)) {
 			return false
 		}
-		if timeout > 0 && timeout != *c.Timeout {
+		if timeout > 0 && timeout != aws.Int64Value(c.Timeout) {
 			return false
 		}
 		for k, v := range environment {
@@ -37,7 +38,7 @@ func LambdaFunctionConfigMatcher(roleArn string, handler string, keyArn, runtime
 			if val, ok = c.Environment.Variables[k]; !ok {
 				return false
 			}
-			if strings.ToLower(v) != strings.ToLower(*val) {
+			if !strings.EqualFold(v, aws.StringValue(val)) {
 				return false
 			}
 		}

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	terratest "github.com/gruntwork-io/terratest/modules/aws"
 )
@@ -13,16 +14,16 @@ import (
 // a matcher function that validates a *cloudwatchevents.DescribeRuleOutput
 func CloudwatchEventsRuleMatcher(arn string, state string, scheduleExpression string, description string) func(*cloudwatchevents.DescribeRuleOutput) bool {
 	return func(r *cloudwatchevents.DescribeRuleOutput) bool {
-		if len(arn) > 0 && strings.ToLower(arn) != strings.ToLower(*r.Arn) {
+		if len(arn) > 0 && !strings.EqualFold(arn, aws.StringValue(r.Arn)) {
 			return false
 		}
-		if len(state) > 0 && strings.ToLower(state) != strings.ToLower(*r.State) {
+		if len(state) > 0 && !strings.EqualFold(state, aws.StringValue(r.State)) {
 			return false
 		}
-		if len(scheduleExpression) > 0 && strings.ToLower(scheduleExpression) != strings.ToLower(*r.ScheduleExpression) {
+		if len(scheduleExpression) > 0 && !strings.EqualFold(scheduleExpression, aws.StringValue(r.ScheduleExpression)) {
 			return false
 		}
-		if len(description) > 0 && strings.ToLower(description) != strings.ToLower(*r.Description) {
+		if len(description) > 0 && !strings.EqualFold(description, aws.StringValue(r.Description)) {
 			return false
 		}
 		return true
