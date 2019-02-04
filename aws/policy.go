@@ -58,7 +58,7 @@ func PolicyStatementMatcher(s *PolicyStatement) func(*PolicyStatement) bool {
 		if len(s.Action) > 0 && !stringSliceEqual(s.Action, statement.Action) {
 			return false
 		}
-		if len(s.Effect) > 0 && s.Effect != statement.Effect {
+		if len(s.Effect) > 0 && !strings.EqualFold(s.Effect, statement.Effect) {
 			return false
 		}
 		if len(s.Resource) > 0 && !stringSliceEqual(s.Resource, statement.Resource) {
@@ -68,7 +68,7 @@ func PolicyStatementMatcher(s *PolicyStatement) func(*PolicyStatement) bool {
 			return false
 		}
 		if s.Principal != nil &&
-			(strings.EqualFold(s.Principal.Type, statement.Principal.Type) ||
+			(!strings.EqualFold(s.Principal.Type, statement.Principal.Type) ||
 				!stringSliceEqual(s.Principal.Values, statement.Principal.Values)) {
 			return false
 		}
