@@ -58,7 +58,7 @@ func PolicyStatementMatcher(s *PolicyStatement) func(*PolicyStatement) bool {
 		if len(s.Action) > 0 && !stringSliceEqual(s.Action, statement.Action) {
 			return false
 		}
-		if len(s.Effect) > 0 && s.Effect != statement.Effect {
+		if len(s.Effect) > 0 && !strings.EqualFold(s.Effect, statement.Effect) {
 			return false
 		}
 		if len(s.Resource) > 0 && !stringSliceEqual(s.Resource, statement.Resource) {
@@ -68,7 +68,7 @@ func PolicyStatementMatcher(s *PolicyStatement) func(*PolicyStatement) bool {
 			return false
 		}
 		if s.Principal != nil &&
-			(strings.EqualFold(s.Principal.Type, statement.Principal.Type) ||
+			(!strings.EqualFold(s.Principal.Type, statement.Principal.Type) ||
 				!stringSliceEqual(s.Principal.Values, statement.Principal.Values)) {
 			return false
 		}
@@ -342,6 +342,10 @@ func setPrincipalProperty(principal *PolicyPrincipal, m map[string]interface{}) 
 			principal.Values = []string{val}
 		case []string:
 			principal.Values = val
+		case interface{}:
+			for _, item := range val.([]interface{}) {
+				principal.Values = append(principal.Values, item.(string))
+			}
 		default:
 			return fmt.Errorf("type not supported: %T", val)
 		}
@@ -414,50 +418,3 @@ func interfaceToStringSlice(m interface{}) ([]string, error) {
 		return nil, fmt.Errorf("type not supported: %T", val)
 	}
 }
-
-/*
-
-
-
-Principal Field Types:
-
-"Principal": "*"
-"Principal" : { "AWS" : "*" }
-"Principal": { "CanonicalUser": "79a59df900b949e55d96a1e698fbacedfd6e09d98eacf8f8d5218e7cd47ef2be" }
-"Principal": { "AWS": "arn:aws:sts::AWS-account-ID:assumed-role/role-name/role-session-name" }
-"Principal": { "Federated": "accounts.google.com" }
-"Principal": {
-  "AWS": [
-    "arn:aws:iam::AWS-account-ID:user/user-name-1",
-    "arn:aws:iam::AWS-account-ID:user/UserName2"
-  ]
-}
-"Principal": {
-  "Service": [
-    "elasticmapreduce.amazonaws.com",
-    "datapipeline.amazonaws.com"
-  ]
-}
-&aws.PolicyStatement{
-	Effect:[]string{"Allow"},
-	Action:[]string{"sts:AssumeRole"},
-	Resource:[]string(nil),
-	Principal:(*aws.PolicyPrincipal)(0xc00054c840)
-}, not found in
-{
-"Version":"2012-10-17",
-"Statement":[
-{"Sid":"",
-"Effect":"Allow",
-"Principal":{"Service":"lambda.amazonaws.com"},
-"Action":"sts:AssumeRole"
-}]}
-
-
-"Condition":
-	{"ArnLike":{"AWS:SourceArn":"arn:aws:events:us-east-1:422624340815:rule/grace-inventory-lambda"}}}
-"Condition":
-	{"DateGreaterThan":{"aws:CurrentTime":"2013-08-16T12:00:00Z"},"DateLessThan":{"aws:CurrentTime" : "2013-08-16T15:00:00Z"},"IpAddress":{"aws:SourceIp":["192.0.2.0/24","203.0.113.0/24"]}}
-
-func:{key:value}
-*/

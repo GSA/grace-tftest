@@ -5,5 +5,4 @@ import (
 )
 
 func TestPolicy(t *testing.T) {
-
 }
