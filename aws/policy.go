@@ -247,10 +247,14 @@ func stringSliceEqual(a []string, b []string) bool {
 	if len(a) != len(b) {
 		return false
 	}
+outer:
 	for i := 0; i < len(a); i++ {
-		if !strings.EqualFold(a[i], b[i]) {
-			return false
+		for r := 0; r < len(b); r++ {
+			if strings.EqualFold(a[i], b[r]) {
+				continue outer
+			}
 		}
+		return false
 	}
 	return true
 }
