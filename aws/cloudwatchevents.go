@@ -15,15 +15,19 @@ import (
 func CloudwatchEventsRuleMatcher(arn string, state string, scheduleExpression string, description string) func(*cloudwatchevents.DescribeRuleOutput) bool {
 	return func(r *cloudwatchevents.DescribeRuleOutput) bool {
 		if len(arn) > 0 && !strings.EqualFold(arn, aws.StringValue(r.Arn)) {
+			debug("CloudwatchEventsRuleMatcher: failed to match ARN values: %q != %q\n", arn, aws.StringValue(r.Arn))
 			return false
 		}
 		if len(state) > 0 && !strings.EqualFold(state, aws.StringValue(r.State)) {
+			debug("CloudwatchEventsRuleMatcher: failed to match State values: %q != %q\n", state, aws.StringValue(r.State))
 			return false
 		}
 		if len(scheduleExpression) > 0 && !strings.EqualFold(scheduleExpression, aws.StringValue(r.ScheduleExpression)) {
+			debug("CloudwatchEventsRuleMatcher: failed to match ScheduleExpression values: %q != %q\n", scheduleExpression, aws.StringValue(r.ScheduleExpression))
 			return false
 		}
 		if len(description) > 0 && !strings.EqualFold(description, aws.StringValue(r.Description)) {
+			debug("CloudwatchEventsRuleMatcher: failed to match Description values: %q != %q\n", description, aws.StringValue(r.Description))
 			return false
 		}
 		return true

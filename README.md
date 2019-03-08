@@ -5,6 +5,7 @@
 This repository contains supplemental AWS functions that were required by the GRACE team and not available in [terratest](https://github.com/gruntwork-io/terratest). These functions can potentially be commited to terratest in pull requests in the future.
 
 ## Usage instructions
+To enable debugging, set the `TFTEST_DEBUG` environment variable to `true`
 
 1. Install system dependencies.
     1. [Go](https://golang.org/)

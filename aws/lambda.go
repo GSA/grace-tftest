@@ -16,18 +16,23 @@ import (
 func LambdaFunctionConfigMatcher(roleArn string, handler string, keyArn, runtime string, timeout int64, environment map[string]string) func(*lambda.FunctionConfiguration) bool {
 	return func(c *lambda.FunctionConfiguration) bool {
 		if len(roleArn) > 0 && !strings.EqualFold(roleArn, aws.StringValue(c.Role)) {
+			debug("LambdaFunctionConfigMatcher: failed to match Role values: %q != %q\n", roleArn, aws.StringValue(c.Role))
 			return false
 		}
 		if len(handler) > 0 && !strings.EqualFold(handler, aws.StringValue(c.Handler)) {
+			debug("LambdaFunctionConfigMatcher: failed to match Handler values: %q != %q\n", handler, aws.StringValue(c.Handler))
 			return false
 		}
 		if len(keyArn) > 0 && !strings.EqualFold(keyArn, aws.StringValue(c.KMSKeyArn)) {
+			debug("LambdaFunctionConfigMatcher: failed to match KMSKeyArn values: %q != %q\n", keyArn, aws.StringValue(c.KMSKeyArn))
 			return false
 		}
 		if len(runtime) > 0 && !strings.EqualFold(runtime, aws.StringValue(c.Runtime)) {
+			debug("LambdaFunctionConfigMatcher: failed to match Runtime values: %q != %q\n", runtime, aws.StringValue(c.Runtime))
 			return false
 		}
 		if timeout > 0 && timeout != aws.Int64Value(c.Timeout) {
+			debug("LambdaFunctionConfigMatcher: failed to match Timeout values: %d != %d\n", timeout, aws.Int64Value(c.Timeout))
 			return false
 		}
 		for k, v := range environment {
@@ -36,9 +41,11 @@ func LambdaFunctionConfigMatcher(roleArn string, handler string, keyArn, runtime
 				val *string
 			)
 			if val, ok = c.Environment.Variables[k]; !ok {
+				debug("LambdaFunctionConfigMatcher: environment variable %q does not exist on remote", k)
 				return false
 			}
 			if !strings.EqualFold(v, aws.StringValue(val)) {
+				debug("LambdaFunctionConfigMatcher: failed to match environment variable %q values: %q != %q\n", k, v, aws.StringValue(val))
 				return false
 			}
 		}
