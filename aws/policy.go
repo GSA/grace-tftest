@@ -56,26 +56,35 @@ type PolicyCondition struct {
 func PolicyStatementMatcher(s *PolicyStatement) func(*PolicyStatement) bool {
 	return func(statement *PolicyStatement) bool {
 		if len(s.Action) > 0 && !stringSliceEqual(s.Action, statement.Action) {
+			debug("PolicyStatementMatcher: failed to match Action values: %q != %q\n", s.Action, statement.Action)
 			return false
 		}
 		if len(s.Effect) > 0 && !strings.EqualFold(s.Effect, statement.Effect) {
+			debug("PolicyStatementMatcher: failed to match Effect values: %q != %q\n", s.Effect, statement.Effect)
 			return false
 		}
 		if len(s.Resource) > 0 && !stringSliceEqual(s.Resource, statement.Resource) {
+			debug("PolicyStatementMatcher: failed to match Resource values: %q != %q\n", s.Resource, statement.Resource)
 			return false
 		}
 		if len(s.Sid) > 0 && !strings.EqualFold(s.Sid, statement.Sid) {
+			debug("PolicyStatementMatcher: failed to match Sid values: %q != %q\n", s.Sid, statement.Sid)
 			return false
 		}
 		if s.Principal != nil &&
 			(!strings.EqualFold(s.Principal.Type, statement.Principal.Type) ||
 				!stringSliceEqual(s.Principal.Values, statement.Principal.Values)) {
+			debug("PolicyStatementMatcher: failed to match Principal: {Type: %q, Values: %v} != {Type: %q, Values: %v}\n",
+				s.Principal.Type, s.Principal.Values, statement.Principal.Type, statement.Principal.Values)
 			return false
 		}
 		if s.Condition != nil &&
 			(!strings.EqualFold(s.Condition.Operator, statement.Condition.Operator) ||
 				!strings.EqualFold(s.Condition.Property, statement.Condition.Property) ||
 				!stringSliceEqual(s.Condition.Value, statement.Condition.Value)) {
+			debug("PolicyStatementMatcher: failed to match Principal: {Operator: %q, Property: %q, Value: %v} != {Operator: %q, Property: %q, Value: %v}\n",
+				s.Condition.Operator, s.Condition.Property, s.Condition.Value,
+				statement.Condition.Operator, statement.Condition.Property, statement.Condition.Value)
 			return false
 		}
 		return true
