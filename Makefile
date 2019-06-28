@@ -1,3 +1,8 @@
+GOBIN := $(GOPATH)/bin
+GODEP := $(GOBIN)/dep
+GOLANGCILINT := $(GOBIN)/golangci-lint
+GOSEC := $(GOBIN)/gosec
+
 .PHONY: test lint dependencies
 default: test
 
@@ -5,9 +10,9 @@ test: lint
 	go test -v ./...
 
 lint: dependencies
-	dep ensure
-	golangci-lint run ./...
-	gosec ./...
+	$(GODEP) ensure
+	$(GOLANGCILINT) run ./...
+	$(GOSEC) ./...
 
 Gopkg.toml: $(GODEP)
 ifeq (,$(wildcard Gopkg.toml))
