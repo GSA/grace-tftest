@@ -13,7 +13,8 @@ import (
 // LambdaFunctionConfigMatcher ... takes properties that are intended to be matched and returns
 // a matcher function that verifies the properties passed are present and match in the configuration
 // nolint: gocyclo
-func LambdaFunctionConfigMatcher(roleArn string, handler string, keyArn, runtime string, timeout int64, environment map[string]string) func(*lambda.FunctionConfiguration) bool {
+func LambdaFunctionConfigMatcher(roleArn string, handler string, keyArn, runtime string,
+	timeout int64, environment map[string]string) func(*lambda.FunctionConfiguration) bool {
 	return func(c *lambda.FunctionConfiguration) bool {
 		if len(roleArn) > 0 && !strings.EqualFold(roleArn, aws.StringValue(c.Role)) {
 			debug("LambdaFunctionConfigMatcher: failed to match Role values: %q != %q\n", roleArn, aws.StringValue(c.Role))
