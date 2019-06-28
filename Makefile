@@ -16,7 +16,7 @@ lint: dependencies
 
 Gopkg.toml: $(GODEP)
 ifeq (,$(wildcard Gopkg.toml))
-	dep init
+	$(GODEP) init
 endif
 
 dependencies: $(GOLANGCILINT) $(GOSEC) Gopkg.toml
