@@ -4,17 +4,17 @@ default: test
 test: lint
 	go test -v ./...
 
-lint: Gopkg.toml dependencies
+lint: dependencies
 	dep ensure
 	golangci-lint run ./...
 	gosec ./...
 
-Gopkg.toml:
+Gopkg.toml: $(GODEP)
 ifeq (,$(wildcard Gopkg.toml))
 	dep init
 endif
 
-dependencies: $(GODEP) $(GOLANGCILINT) $(GOSEC)
+dependencies: $(GOLANGCILINT) $(GOSEC) Gopkg.toml
 
 $(GOLANGCILINT):
 	go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
