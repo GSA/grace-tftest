@@ -15,7 +15,7 @@ jobs:
       - run:
           name: Run tests
           command: |
-            make test_go
+            make test
 
 workflows:
   version: 2
