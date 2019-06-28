@@ -1,18 +1,26 @@
+.PHONY: test lint dependencies
 default: test
 
-test: test_go
+test: lint
+	go test -v ./...
 
-test_go: validate_go
-	go test ./...
-
-validate_go: dep_ensure
-	gometalinter --deadline=240s --vendor ./...
+lint: Gopkg.toml dependencies
+	dep ensure
+	golangci-lint run ./...
 	gosec ./...
 
-dep_init:
-ifeq (,$(wildcard ./Gopkg.toml))
+Gopkg.toml:
+ifeq (,$(wildcard Gopkg.toml))
 	dep init
 endif
 
-dep_ensure: dep_init
-	dep ensure
+dependencies: $(GODEP) $(GOLANGCILINT) $(GOSEC)
+
+$(GOLANGCILINT):
+	go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+
+$(GODEP):
+	go get -u github.com/golang/dep/cmd/dep
+
+$(GOSEC):
+	go get -u github.com/securego/gosec/cmd/gosec
