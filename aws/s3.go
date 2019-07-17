@@ -11,6 +11,28 @@ import (
 	terratest "github.com/gruntwork-io/terratest/modules/aws"
 )
 
+// NotificationConfig ... is a generic structure used for normalizing
+// the three different types of S3 notifications.
+// types: LambdaFunctionConfiguration, QueueConfiguration, and TopicConfiguration
+type NotificationConfig struct {
+	// Events is a required field
+	Events []*string
+
+	// A container for object key name filtering rules. For information about key
+	// name filtering, see Configuring Event Notifications (http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html)
+	// in the Amazon Simple Storage Service Developer Guide.
+	Filter []*s3.FilterRule
+
+	// An optional unique identifier for configurations in a notification configuration.
+	// If you don't provide one, Amazon S3 will assign an ID.
+	ID *string
+
+	// The Amazon Resource Name (ARN) of the resource triggered
+	//
+	// Arn is a required field
+	Arn *string
+}
+
 // S3BucketEncryptionRuleMatcher ... returns a matcher that uses the given properties to match
 // a ServerSideEncryptionRule
 func S3BucketEncryptionRuleMatcher(keyArn string, algorithm string) func(*s3.ServerSideEncryptionRule) bool {
@@ -144,4 +166,90 @@ func GetS3BucketLifecycleRulesE(region string, name string) ([]*s3.LifecycleRule
 		return nil, err
 	}
 	return out.Rules, nil
+}
+
+// FindS3BucketNotificationConfig ... retrieves the notification config for the bucket with the given name that matches the given matcher
+func FindS3BucketNotificationConfig(t *testing.T, region string, name string, matcher func(*NotificationConfig) bool) *NotificationConfig {
+	config, err := FindS3BucketNotificationConfigE(region, name, matcher)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return config
+}
+
+// FindS3BucketNotificationConfigE ... retrieves the notification config for the bucket with the given name that matches the given matcher
+func FindS3BucketNotificationConfigE(region string, name string, matcher func(*NotificationConfig) bool) (*NotificationConfig, error) {
+	configs, err := GetS3BucketNotificationConfigsE(region, name)
+	if err != nil {
+		return nil, err
+	}
+	for _, c := range configs {
+		if matcher(c) {
+			return c, nil
+		}
+	}
+	return nil, fmt.Errorf("failed to locate a matching notification config for bucket with name %q", name)
+}
+
+// GetS3BucketNotificationConfigs ... retrieves all lifecycle rules for the bucket with the given name
+func GetS3BucketNotificationConfigs(t *testing.T, region string, name string) []*NotificationConfig {
+	configs, err := GetS3BucketNotificationConfigsE(region, name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return configs
+}
+
+// GetS3BucketNotificationConfigsE ... returns all S3 notification configurations as a slice of
+// *NotificationConfig, all Arns are normalized into the Arn property
+func GetS3BucketNotificationConfigsE(region string, name string) ([]*NotificationConfig, error) {
+	client, err := terratest.NewS3ClientE(nil, region)
+	if err != nil {
+		return nil, err
+	}
+	out, err := client.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
+		Bucket: &name,
+	})
+	if err != nil {
+		return nil, err
+	}
+	var configs []*NotificationConfig
+	configs = append(configs, lambdaConfigsToNotificationConfigs(out.LambdaFunctionConfigurations)...)
+	configs = append(configs, queueConfigsToNotificationConfigs(out.QueueConfigurations)...)
+	configs = append(configs, topicConfigsToNotificationConfigs(out.TopicConfigurations)...)
+	return configs, nil
+}
+
+func lambdaConfigsToNotificationConfigs(in []*s3.LambdaFunctionConfiguration) (out []*NotificationConfig) {
+	for _, i := range in {
+		out = append(out, &NotificationConfig{
+			Events: i.Events,
+			Filter: i.Filter.Key.FilterRules,
+			ID:     i.Id,
+			Arn:    i.LambdaFunctionArn,
+		})
+	}
+	return
+}
+func queueConfigsToNotificationConfigs(in []*s3.QueueConfiguration) (out []*NotificationConfig) {
+	for _, i := range in {
+		out = append(out, &NotificationConfig{
+			Events: i.Events,
+			Filter: i.Filter.Key.FilterRules,
+			ID:     i.Id,
+			Arn:    i.QueueArn,
+		})
+	}
+	return
+}
+func topicConfigsToNotificationConfigs(in []*s3.TopicConfiguration) (out []*NotificationConfig) {
+	for _, i := range in {
+		out = append(out, &NotificationConfig{
+			Events: i.Events,
+			Filter: i.Filter.Key.FilterRules,
+			ID:     i.Id,
+			Arn:    i.TopicArn,
+		})
+	}
+	return
 }
