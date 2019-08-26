@@ -1,4 +1,4 @@
-# GRACE Terraform Test [![CircleCI](https://circleci.com/gh/GSA/grace-tftest.svg?style=svg)](https://circleci.com/gh/GSA/grace-tftest)
+# GRACE Terraform Test [![CircleCI](https://circleci.com/gh/GSA/grace-tftest.svg?style=svg)](https://circleci.com/gh/GSA/grace-tftest) [![Go Report Card](https://goreportcard.com/badge/github.com/GSA/grace-tftest)](https://goreportcard.com/report/github.com/GSA/grace-tftest)
 
 ## Repository Contents
 
