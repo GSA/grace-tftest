@@ -1,4 +1,4 @@
-# GRACE Terraform Test [![CircleCI](https://circleci.com/gh/GSA/grace-tftest.svg?style=svg)](https://circleci.com/gh/GSA/grace-tftest) [![Go Report Card](https://goreportcard.com/badge/github.com/GSA/grace-tftest)](https://goreportcard.com/report/github.com/GSA/grace-tftest)
+# GRACE Terraform Test [![License](https://img.shields.io/badge/license-CC0-blue)](license.md) [![GoDoc](https://img.shields.io/badge/go-documentation-blue.svg)](https://godoc.org/github.com/GSA/grace-tftest/aws) [![CircleCI](https://circleci.com/gh/GSA/grace-tftest.svg?style=shield)](https://circleci.com/gh/GSA/grace-tftest) [![Go Report Card](https://goreportcard.com/badge/github.com/GSA/grace-tftest)](https://goreportcard.com/report/github.com/GSA/grace-tftest)
 
 ## Repository Contents
 
