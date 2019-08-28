@@ -9,12 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-// Filter is an interface for filtering *s3.ServerSideEncryptionRule objects
-type Filter func(*s3.ServerSideEncryptionRule) bool
-
 // Encryption contains the necessary properties for filtering *s3.ServerSideEncryptionRule objects
 type Encryption struct {
-	filters []Filter
+	filters []shared.Filter
 	client  client.ConfigProvider
 	rule    *s3.ServerSideEncryptionRule
 	name    string
@@ -52,7 +49,7 @@ func (e *Encryption) Assert(t *testing.T, rules ...*s3.ServerSideEncryptionRule)
 		e.rule = rules[0]
 	}
 
-	e.filters = []Filter{}
+	e.filters = []shared.Filter{}
 	return e
 }
 
@@ -72,12 +69,12 @@ func (e *Encryption) First(t *testing.T, rules ...*s3.ServerSideEncryptionRule) 
 		e.rule = rules[0]
 	}
 
-	e.filters = []Filter{}
+	e.filters = []shared.Filter{}
 	return e
 }
 
 // Filter adds the 'filter' provided to the filter list
-func (e *Encryption) Filter(filter Filter) *Encryption {
+func (e *Encryption) Filter(filter shared.Filter) *Encryption {
 	e.filters = append(e.filters, filter)
 	return e
 }
@@ -86,7 +83,11 @@ func (e *Encryption) Filter(filter Filter) *Encryption {
 // the IsSSE filter: filters rules by whether they have
 // ApplyServerSideEncryptionByDefault set
 func (e *Encryption) IsSSE() *Encryption {
-	e.filters = append(e.filters, func(rule *s3.ServerSideEncryptionRule) bool {
+	e.filters = append(e.filters, func(v interface{}) bool {
+		rule := convert(v)
+		if rule == nil {
+			return false
+		}
 		shared.Debugf("%#v != nil -> %t\n", rule.ApplyServerSideEncryptionByDefault, rule.ApplyServerSideEncryptionByDefault != nil)
 		return rule.ApplyServerSideEncryptionByDefault != nil
 	})
@@ -97,7 +98,11 @@ func (e *Encryption) IsSSE() *Encryption {
 // the Alg filter: filters rules by SSEAlgorithm where 'alg'
 // provided is the expected SSEAlgorithm value
 func (e *Encryption) Alg(alg string) *Encryption {
-	e.filters = append(e.filters, func(rule *s3.ServerSideEncryptionRule) bool {
+	e.filters = append(e.filters, func(v interface{}) bool {
+		rule := convert(v)
+		if rule == nil {
+			return false
+		}
 		shared.Debugf("%s == %s -> %t\n",
 			alg, aws.StringValue(rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm),
 			alg == aws.StringValue(rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm))
@@ -110,7 +115,11 @@ func (e *Encryption) Alg(alg string) *Encryption {
 // the ID filter: filters rules by KMSMasterKeyID where 'id'
 // provided is the expected KMSMasterKeyID value
 func (e *Encryption) ID(id string) *Encryption {
-	e.filters = append(e.filters, func(rule *s3.ServerSideEncryptionRule) bool {
+	e.filters = append(e.filters, func(v interface{}) bool {
+		rule := convert(v)
+		if rule == nil {
+			return false
+		}
 		shared.Debugf("%s == %s -> %t\n",
 			id, aws.StringValue(rule.ApplyServerSideEncryptionByDefault.KMSMasterKeyID),
 			id == aws.StringValue(rule.ApplyServerSideEncryptionByDefault.KMSMasterKeyID))
@@ -119,7 +128,7 @@ func (e *Encryption) ID(id string) *Encryption {
 	return e
 }
 
-func (e *Encryption) filter(rules []*s3.ServerSideEncryptionRule) (result []*s3.ServerSideEncryptionRule, err error) {
+func (e *Encryption) filter(rules []*s3.ServerSideEncryptionRule) ([]*s3.ServerSideEncryptionRule, error) {
 	if len(rules) == 0 {
 		var err error
 		rules, err = e.rules()
@@ -127,22 +136,7 @@ func (e *Encryption) filter(rules []*s3.ServerSideEncryptionRule) (result []*s3.
 			return nil, err
 		}
 	}
-	shared.Debugf("len(rules) = %d, len(e.filters) = %d\n", len(rules), len(e.filters))
-outer:
-	for x, rule := range rules {
-		shared.Debugf("rules(%d):\n", x)
-		shared.Dump(rule)
-		for xx, f := range e.filters {
-			if !f(rule) {
-				continue outer
-			}
-			shared.Debugf("rules(%d) matched filters(%d)\n", x, xx)
-		}
-		shared.Debugf("storing rules(%d)\n", x)
-		result = append(result, rule)
-	}
-	shared.Dump(result)
-	return
+	return fromIface(shared.GenericFilter(e.filters, toIface(rules))), nil
 }
 
 func (e *Encryption) rules() ([]*s3.ServerSideEncryptionRule, error) {
@@ -154,4 +148,30 @@ func (e *Encryption) rules() ([]*s3.ServerSideEncryptionRule, error) {
 		return nil, err
 	}
 	return out.ServerSideEncryptionConfiguration.Rules, nil
+}
+
+func convert(in interface{}) *s3.ServerSideEncryptionRule {
+	out, ok := in.(*s3.ServerSideEncryptionRule)
+	if !ok {
+		shared.Debugf("object not convertible to *s3.ServerSideEncryptionRule: ")
+		shared.Dump(in)
+		return nil
+	}
+	return out
+}
+func toIface(in []*s3.ServerSideEncryptionRule) (out []interface{}) {
+	for _, i := range in {
+		out = append(out, i)
+	}
+	return
+}
+func fromIface(in []interface{}) (out []*s3.ServerSideEncryptionRule) {
+	for _, i := range in {
+		v := convert(i)
+		if v == nil {
+			continue
+		}
+		out = append(out, v)
+	}
+	return
 }
