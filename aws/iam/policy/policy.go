@@ -10,14 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 )
 
-// Filter is an interface for filtering *iam.Policy objects
-type Filter func(*iam.Policy) bool
-
 // Policy contains the necessary properties for testing *iam.Policy objects
 type Policy struct {
 	client  client.ConfigProvider
 	policy  *iam.Policy
-	filters []Filter
+	filters []shared.Filter
 }
 
 // New returns a new *Policy
@@ -55,7 +52,7 @@ func (p *Policy) Assert(t *testing.T, policies ...*iam.Policy) *Policy {
 		p.policy = policies[0]
 	}
 
-	p.filters = []Filter{}
+	p.filters = []shared.Filter{}
 	return p
 }
 
@@ -75,7 +72,7 @@ func (p *Policy) First(t *testing.T, policies ...*iam.Policy) *Policy {
 		p.policy = policies[0]
 	}
 
-	p.filters = []Filter{}
+	p.filters = []shared.Filter{}
 	return p
 }
 
@@ -83,7 +80,11 @@ func (p *Policy) First(t *testing.T, policies ...*iam.Policy) *Policy {
 // the Arn filter: filters policies by Arn where 'arn' provided
 // is the expected Arn value
 func (p *Policy) Arn(arn string) *Policy {
-	p.filters = append(p.filters, func(policy *iam.Policy) bool {
+	p.filters = append(p.filters, func(v interface{}) bool {
+		policy := convert(v)
+		if policy == nil {
+			return false
+		}
 		shared.Debugf("%s == %s -> %t\n", arn, aws.StringValue(policy.Arn), arn == aws.StringValue(policy.Arn))
 		return arn == aws.StringValue(policy.Arn)
 	})
@@ -91,7 +92,7 @@ func (p *Policy) Arn(arn string) *Policy {
 }
 
 // Filter adds the 'filter' provided to the filter list
-func (p *Policy) Filter(filter Filter) *Policy {
+func (p *Policy) Filter(filter shared.Filter) *Policy {
 	p.filters = append(p.filters, filter)
 	return p
 }
@@ -100,7 +101,11 @@ func (p *Policy) Filter(filter Filter) *Policy {
 // the ID filter: filters policies by ID where 'id' provided
 // is the expected PolicyId value
 func (p *Policy) ID(id string) *Policy {
-	p.filters = append(p.filters, func(policy *iam.Policy) bool {
+	p.filters = append(p.filters, func(v interface{}) bool {
+		policy := convert(v)
+		if policy == nil {
+			return false
+		}
 		shared.Debugf("%s == %s -> %t\n", id, aws.StringValue(policy.PolicyId), id == aws.StringValue(policy.PolicyId))
 		return id == aws.StringValue(policy.PolicyId)
 	})
@@ -111,36 +116,26 @@ func (p *Policy) ID(id string) *Policy {
 // the Name filter: filters policies by Name where 'name' provided
 // is the expected PolicyName value
 func (p *Policy) Name(name string) *Policy {
-	p.filters = append(p.filters, func(policy *iam.Policy) bool {
+	p.filters = append(p.filters, func(v interface{}) bool {
+		policy := convert(v)
+		if policy == nil {
+			return false
+		}
 		shared.Debugf("%s == %s -> %t\n", name, aws.StringValue(policy.PolicyName), name == aws.StringValue(policy.PolicyName))
 		return name == aws.StringValue(policy.PolicyName)
 	})
 	return p
 }
 
-func (p *Policy) filter(policies []*iam.Policy) (result []*iam.Policy, err error) {
+func (p *Policy) filter(policies []*iam.Policy) ([]*iam.Policy, error) {
 	if len(policies) == 0 {
+		var err error
 		policies, err = p.policies()
 		if err != nil {
-			return
+			return nil, err
 		}
 	}
-	shared.Debugf("len(policies) = %d, len(p.filters) = %d\n", len(policies), len(p.filters))
-outer:
-	for x, policy := range policies {
-		shared.Debugf("policies(%d)\n", x)
-		shared.Dump(policy)
-		for xx, f := range p.filters {
-			if !f(policy) {
-				continue outer
-			}
-			shared.Debugf("policies(%d) matched filters(%d)\n", x, xx)
-		}
-		shared.Debugf("storing policies(%d)\n", x)
-		result = append(result, policy)
-	}
-	shared.Dump(result)
-	return
+	return fromIface(shared.GenericFilter(p.filters, toIface(policies))), nil
 }
 
 func (p *Policy) policies() ([]*iam.Policy, error) {
@@ -154,4 +149,30 @@ func (p *Policy) policies() ([]*iam.Policy, error) {
 		return nil, err
 	}
 	return policies, nil
+}
+
+func convert(v interface{}) *iam.Policy {
+	statement, ok := v.(*iam.Policy)
+	if !ok {
+		shared.Debugf("object not convertible to *policy.Statement: ")
+		shared.Dump(v)
+		return nil
+	}
+	return statement
+}
+func toIface(in []*iam.Policy) (out []interface{}) {
+	for _, i := range in {
+		out = append(out, i)
+	}
+	return
+}
+func fromIface(in []interface{}) (out []*iam.Policy) {
+	for _, i := range in {
+		v := convert(i)
+		if v == nil {
+			continue
+		}
+		out = append(out, v)
+	}
+	return
 }

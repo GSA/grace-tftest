@@ -13,13 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 )
 
-// Filter is an interface for filtering *PolicyStatement objects
-type Filter func(*policy.Statement) bool
-
 // Statement stores necessary objects for
 // filtering *PolicyStatement objects
 type Statement struct {
-	filters   []Filter
+	filters   []shared.Filter
 	client    client.ConfigProvider
 	policy    *iam.Policy
 	statement *policy.Statement
@@ -58,7 +55,7 @@ func (s *Statement) Assert(t *testing.T, statements ...*policy.Statement) *State
 		s.statement = statements[0]
 	}
 
-	s.filters = []Filter{}
+	s.filters = []shared.Filter{}
 	return s
 }
 
@@ -78,7 +75,7 @@ func (s *Statement) First(t *testing.T, statements ...*policy.Statement) *Statem
 		s.statement = statements[0]
 	}
 
-	s.filters = []Filter{}
+	s.filters = []shared.Filter{}
 	return s
 }
 
@@ -86,7 +83,12 @@ func (s *Statement) First(t *testing.T, statements ...*policy.Statement) *Statem
 // the Action filter: filters *Statement objects by 'Action' where 'arn' provided
 // is the expected Action value
 func (s *Statement) Action(action ...string) *Statement {
-	s.filters = append(s.filters, func(statement *policy.Statement) bool {
+	s.filters = append(s.filters, func(v interface{}) bool {
+		statement := convert(v)
+		if statement == nil {
+			return false
+		}
+		shared.Debugf("%s == %s -> %t\n", action, statement.Action, shared.StringSliceEqual(action, statement.Action))
 		return shared.StringSliceEqual(action, statement.Action)
 	})
 	return s
@@ -96,14 +98,19 @@ func (s *Statement) Action(action ...string) *Statement {
 // the Effect filter: filters *Statement objects by 'Effect' where 'effect' provided
 // is the expected Effect value
 func (s *Statement) Effect(effect string) *Statement {
-	s.filters = append(s.filters, func(statement *policy.Statement) bool {
+	s.filters = append(s.filters, func(v interface{}) bool {
+		statement := convert(v)
+		if statement == nil {
+			return false
+		}
+		shared.Debugf("%s == %s -> %t\n", effect, statement.Effect, strings.EqualFold(effect, statement.Effect))
 		return strings.EqualFold(effect, statement.Effect)
 	})
 	return s
 }
 
 // Filter adds the 'filter' provided to the filter list
-func (s *Statement) Filter(filter Filter) *Statement {
+func (s *Statement) Filter(filter shared.Filter) *Statement {
 	s.filters = append(s.filters, filter)
 	return s
 }
@@ -112,7 +119,12 @@ func (s *Statement) Filter(filter Filter) *Statement {
 // the Resource filter: filters *Statement objects by 'Resource' where 'resource' provided
 // is the expected Resource value
 func (s *Statement) Resource(resource ...string) *Statement {
-	s.filters = append(s.filters, func(statement *policy.Statement) bool {
+	s.filters = append(s.filters, func(v interface{}) bool {
+		statement := convert(v)
+		if statement == nil {
+			return false
+		}
+		shared.Debugf("%s == %s -> %t\n", resource, statement.Resource, shared.StringSliceEqual(resource, statement.Resource))
 		return shared.StringSliceEqual(resource, statement.Resource)
 	})
 	return s
@@ -122,7 +134,12 @@ func (s *Statement) Resource(resource ...string) *Statement {
 // the Sid filter: filters *Statement objects by 'Sid' where 'sid' provided
 // is the expected Sid value
 func (s *Statement) Sid(sid string) *Statement {
-	s.filters = append(s.filters, func(statement *policy.Statement) bool {
+	s.filters = append(s.filters, func(v interface{}) bool {
+		statement := convert(v)
+		if statement == nil {
+			return false
+		}
+		shared.Debugf("%s == %s -> %t\n", sid, statement.Sid, strings.EqualFold(sid, statement.Sid))
 		return strings.EqualFold(sid, statement.Sid)
 	})
 	return s
@@ -132,9 +149,9 @@ func (s *Statement) Sid(sid string) *Statement {
 // the Principal filter: filters *Statement objects by 'Principal' where
 // 'typ, and values' provided are the expected Principal property values
 func (s *Statement) Principal(typ string, values ...string) *Statement {
-	s.filters = append(s.filters, func(statement *policy.Statement) bool {
-		if statement.Principal == nil {
-			shared.Debug("principal was nil")
+	s.filters = append(s.filters, func(v interface{}) bool {
+		statement := convert(v)
+		if statement == nil || statement.Principal == nil {
 			return false
 		}
 		shared.Debugf("principal.type: %s == %s -> %t\nprincipal.values: %v == %v",
@@ -150,7 +167,11 @@ func (s *Statement) Principal(typ string, values ...string) *Statement {
 // the Condition filter: filters *Statement objects by 'Condition' where
 // 'operator, property, and value' provided are the expected Condition property values
 func (s *Statement) Condition(operator string, property string, value ...string) *Statement {
-	s.filters = append(s.filters, func(statement *policy.Statement) bool {
+	s.filters = append(s.filters, func(v interface{}) bool {
+		statement := convert(v)
+		if statement == nil {
+			return false
+		}
 		for _, c := range statement.Condition {
 			shared.Debugf("operator: %s == %s -> %t\nproperty: %s == %s -> %t\nvalue: %v == %v\n",
 				operator, c.Operator, operator == c.Operator,
@@ -168,29 +189,15 @@ func (s *Statement) Condition(operator string, property string, value ...string)
 	return s
 }
 
-func (s *Statement) filter(statements []*policy.Statement) (result []*policy.Statement, err error) {
+func (s *Statement) filter(statements []*policy.Statement) ([]*policy.Statement, error) {
 	if len(statements) == 0 {
+		var err error
 		statements, err = s.statements()
 		if err != nil {
-			return
+			return nil, err
 		}
 	}
-	shared.Debugf("len(statements) = %d, len(s.filters) = %d\n", len(statements), len(s.filters))
-outer:
-	for x, statement := range statements {
-		shared.Debugf("statements(%d):\n", x)
-		shared.Dump(statement)
-		for xx, f := range s.filters {
-			if !f(statement) {
-				continue outer
-			}
-			shared.Debugf("statements(%d) matched filters(%d)\n", x, xx)
-		}
-		shared.Debugf("storing statements(%d)\n", x)
-		result = append(result, statement)
-	}
-	shared.Dump(result)
-	return
+	return fromIface(shared.GenericFilter(s.filters, toIface(statements))), nil
 }
 
 func (s *Statement) statements() ([]*policy.Statement, error) {
@@ -219,4 +226,30 @@ func (s *Statement) policyDocument(p *iam.Policy) (*policy.Document, error) {
 		return nil, err
 	}
 	return doc, nil
+}
+
+func convert(v interface{}) *policy.Statement {
+	statement, ok := v.(*policy.Statement)
+	if !ok {
+		shared.Debugf("object not convertible to *policy.Statement: ")
+		shared.Dump(v)
+		return nil
+	}
+	return statement
+}
+func toIface(in []*policy.Statement) (out []interface{}) {
+	for _, i := range in {
+		out = append(out, i)
+	}
+	return
+}
+func fromIface(in []interface{}) (out []*policy.Statement) {
+	for _, i := range in {
+		v := convert(i)
+		if v == nil {
+			continue
+		}
+		out = append(out, v)
+	}
+	return
 }
