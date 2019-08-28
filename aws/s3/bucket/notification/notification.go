@@ -46,7 +46,7 @@ func (n *Notification) Assert(t *testing.T, configs ...*Configuration) *Notifica
 	switch l := len(configs); {
 	case l == 0:
 		t.Error("no matching configuration was found")
-	case l > 0:
+	case l > 1:
 		t.Error("more than one matching configuration was found")
 	default:
 		n.config = configs[0]
@@ -87,6 +87,7 @@ func (n *Notification) Filter(filter Filter) *Notification {
 // is the expected Arn value
 func (n *Notification) Arn(arn string) *Notification {
 	n.filters = append(n.filters, func(c *Configuration) bool {
+		shared.Debugf("%s == %s -> %t\n", arn, c.Arn, arn == c.Arn)
 		return arn == c.Arn
 	})
 	return n
@@ -97,6 +98,7 @@ func (n *Notification) Arn(arn string) *Notification {
 // is the expected ID value
 func (n *Notification) ID(id string) *Notification {
 	n.filters = append(n.filters, func(c *Configuration) bool {
+		shared.Debugf("%s == %s -> %t\n", id, c.ID, id == c.ID)
 		return id == c.ID
 	})
 	return n
@@ -107,7 +109,8 @@ func (n *Notification) ID(id string) *Notification {
 // is the expected Events value
 func (n *Notification) Events(event ...string) *Notification {
 	n.filters = append(n.filters, func(c *Configuration) bool {
-		return shared.StringSliceEqual(c.Events, event)
+		shared.Debugf("%v == %v\n", event, c.Events)
+		return shared.StringSliceEqual(event, c.Events)
 	})
 	return n
 }
@@ -117,8 +120,12 @@ func (n *Notification) Events(event ...string) *Notification {
 // is the expected FilterRule name and value
 func (n *Notification) Rule(name, value string) *Notification {
 	n.filters = append(n.filters, func(c *Configuration) bool {
+		shared.Debugf("len(c.Filter) = %d", len(c.Filter))
 		for _, f := range c.Filter {
-			if f.Name == name && f.Value == value {
+			shared.Debugf("Name: %s == %s -> %t, Value: %s == %s -> %t\n",
+				name, f.Name, name == f.Name,
+				value, f.Value, value == f.Value)
+			if name == f.Name && value == f.Value {
 				return true
 			}
 		}
@@ -151,15 +158,21 @@ func (n *Notification) filter(configs []*Configuration) (result []*Configuration
 			return nil, err
 		}
 	}
+	shared.Debugf("len(configs) = %d, len(n.filters) = %d\n", len(configs), len(n.filters))
 outer:
-	for _, config := range configs {
-		for _, f := range n.filters {
+	for x, config := range configs {
+		shared.Debugf("configs(%d):\n", x)
+		shared.Dump(configs)
+		for xx, f := range n.filters {
 			if !f(config) {
 				continue outer
 			}
+			shared.Debugf("configs(%d) matched filters(%d)\n", x, xx)
 		}
+		shared.Debugf("storing configs(%d)\n", x)
 		result = append(result, config)
 	}
+	shared.Dump(result)
 	return
 }
 

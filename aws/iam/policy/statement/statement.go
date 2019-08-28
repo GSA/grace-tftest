@@ -52,7 +52,7 @@ func (s *Statement) Assert(t *testing.T, statements ...*policy.Statement) *State
 	switch l := len(statements); {
 	case l == 0:
 		t.Error("no matching statement was found")
-	case l > 0:
+	case l > 1:
 		t.Error("more than one matching statement was found")
 	default:
 		s.statement = statements[0]
@@ -87,7 +87,7 @@ func (s *Statement) First(t *testing.T, statements ...*policy.Statement) *Statem
 // is the expected Action value
 func (s *Statement) Action(action ...string) *Statement {
 	s.filters = append(s.filters, func(statement *policy.Statement) bool {
-		return statement != nil && shared.StringSliceEqual(action, statement.Action)
+		return shared.StringSliceEqual(action, statement.Action)
 	})
 	return s
 }
@@ -133,8 +133,14 @@ func (s *Statement) Sid(sid string) *Statement {
 // 'typ, and values' provided are the expected Principal property values
 func (s *Statement) Principal(typ string, values ...string) *Statement {
 	s.filters = append(s.filters, func(statement *policy.Statement) bool {
-		return statement.Principal != nil &&
-			strings.EqualFold(typ, statement.Principal.Type) &&
+		if statement.Principal == nil {
+			shared.Debug("principal was nil")
+			return false
+		}
+		shared.Debugf("principal.type: %s == %s -> %t\nprincipal.values: %v == %v",
+			typ, statement.Principal.Type, strings.EqualFold(typ, statement.Principal.Type),
+			values, statement.Principal.Values)
+		return strings.EqualFold(typ, statement.Principal.Type) &&
 			shared.StringSliceEqual(values, statement.Principal.Values)
 	})
 	return s
@@ -146,9 +152,14 @@ func (s *Statement) Principal(typ string, values ...string) *Statement {
 func (s *Statement) Condition(operator string, property string, value ...string) *Statement {
 	s.filters = append(s.filters, func(statement *policy.Statement) bool {
 		for _, c := range statement.Condition {
-			if c.Operator == operator &&
-				c.Property == property &&
-				shared.StringSliceEqual(c.Value, value) {
+			shared.Debugf("operator: %s == %s -> %t\nproperty: %s == %s -> %t\nvalue: %v == %v\n",
+				operator, c.Operator, operator == c.Operator,
+				property, c.Property, property == c.Property,
+				value, c.Value)
+
+			if operator == c.Operator &&
+				property == c.Property &&
+				shared.StringSliceEqual(value, c.Value) {
 				return true
 			}
 		}
@@ -164,15 +175,21 @@ func (s *Statement) filter(statements []*policy.Statement) (result []*policy.Sta
 			return
 		}
 	}
+	shared.Debugf("len(statements) = %d, len(s.filters) = %d\n", len(statements), len(s.filters))
 outer:
-	for _, statement := range statements {
-		for _, f := range s.filters {
+	for x, statement := range statements {
+		shared.Debugf("statements(%d):\n", x)
+		shared.Dump(statement)
+		for xx, f := range s.filters {
 			if !f(statement) {
 				continue outer
 			}
+			shared.Debugf("statements(%d) matched filters(%d)\n", x, xx)
 		}
+		shared.Debugf("storing statements(%d)\n", x)
 		result = append(result, statement)
 	}
+	shared.Dump(result)
 	return
 }
 

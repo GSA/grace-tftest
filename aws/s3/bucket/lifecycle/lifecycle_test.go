@@ -50,7 +50,7 @@ func TestLifecycle(t *testing.T) {
 		},
 	}
 
-	New(nil, "").Method("a").ExpDays(1).Status("c").FilterPrefix("b").Assert(t, rules...)
+	New(nil, "").Method("a").IsExp().ExpDays(1).Status("c").FilterPrefix("b").Assert(t, rules...)
 	New(nil, "").Method("a").ExpDays(1).Status("d").FilterTag("b", "c").Assert(t, rules...)
 
 	New(nil, "").Method("a").ExpDays(1).Status("g").

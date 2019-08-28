@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/GSA/grace-tftest/aws/iam/policy/statement"
+	"github.com/GSA/grace-tftest/aws/shared"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -48,7 +49,7 @@ func (p *Policy) Assert(t *testing.T, policies ...*iam.Policy) *Policy {
 	switch l := len(policies); {
 	case l == 0:
 		t.Error("no matching policy was found")
-	case l > 0:
+	case l > 1:
 		t.Error("more than one matching policy was found")
 	default:
 		p.policy = policies[0]
@@ -83,6 +84,7 @@ func (p *Policy) First(t *testing.T, policies ...*iam.Policy) *Policy {
 // is the expected Arn value
 func (p *Policy) Arn(arn string) *Policy {
 	p.filters = append(p.filters, func(policy *iam.Policy) bool {
+		shared.Debugf("%s == %s -> %t\n", arn, aws.StringValue(policy.Arn), arn == aws.StringValue(policy.Arn))
 		return arn == aws.StringValue(policy.Arn)
 	})
 	return p
@@ -99,6 +101,7 @@ func (p *Policy) Filter(filter Filter) *Policy {
 // is the expected PolicyId value
 func (p *Policy) ID(id string) *Policy {
 	p.filters = append(p.filters, func(policy *iam.Policy) bool {
+		shared.Debugf("%s == %s -> %t\n", id, aws.StringValue(policy.PolicyId), id == aws.StringValue(policy.PolicyId))
 		return id == aws.StringValue(policy.PolicyId)
 	})
 	return p
@@ -109,6 +112,7 @@ func (p *Policy) ID(id string) *Policy {
 // is the expected PolicyName value
 func (p *Policy) Name(name string) *Policy {
 	p.filters = append(p.filters, func(policy *iam.Policy) bool {
+		shared.Debugf("%s == %s -> %t\n", name, aws.StringValue(policy.PolicyName), name == aws.StringValue(policy.PolicyName))
 		return name == aws.StringValue(policy.PolicyName)
 	})
 	return p
@@ -121,15 +125,21 @@ func (p *Policy) filter(policies []*iam.Policy) (result []*iam.Policy, err error
 			return
 		}
 	}
+	shared.Debugf("len(policies) = %d, len(p.filters) = %d\n", len(policies), len(p.filters))
 outer:
-	for _, policy := range policies {
-		for _, f := range p.filters {
+	for x, policy := range policies {
+		shared.Debugf("policies(%d)\n", x)
+		shared.Dump(policy)
+		for xx, f := range p.filters {
 			if !f(policy) {
 				continue outer
 			}
+			shared.Debugf("policies(%d) matched filters(%d)\n", x, xx)
 		}
+		shared.Debugf("storing policies(%d)\n", x)
 		result = append(result, policy)
 	}
+	shared.Dump(result)
 	return
 }
 

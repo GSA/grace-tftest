@@ -3,6 +3,7 @@ package encryption
 import (
 	"testing"
 
+	"github.com/GSA/grace-tftest/aws/shared"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -45,7 +46,7 @@ func (e *Encryption) Assert(t *testing.T, rules ...*s3.ServerSideEncryptionRule)
 	switch l := len(rules); {
 	case l == 0:
 		t.Error("no matching lifecycle rule was found")
-	case l > 0:
+	case l > 1:
 		t.Error("more than one matching lifecycle rule was found")
 	default:
 		e.rule = rules[0]
@@ -86,6 +87,7 @@ func (e *Encryption) Filter(filter Filter) *Encryption {
 // ApplyServerSideEncryptionByDefault set
 func (e *Encryption) IsSSE() *Encryption {
 	e.filters = append(e.filters, func(rule *s3.ServerSideEncryptionRule) bool {
+		shared.Debugf("%#v != nil -> %t\n", rule.ApplyServerSideEncryptionByDefault, rule.ApplyServerSideEncryptionByDefault != nil)
 		return rule.ApplyServerSideEncryptionByDefault != nil
 	})
 	return e
@@ -96,6 +98,9 @@ func (e *Encryption) IsSSE() *Encryption {
 // provided is the expected SSEAlgorithm value
 func (e *Encryption) Alg(alg string) *Encryption {
 	e.filters = append(e.filters, func(rule *s3.ServerSideEncryptionRule) bool {
+		shared.Debugf("%s == %s -> %t\n",
+			alg, aws.StringValue(rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm),
+			alg == aws.StringValue(rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm))
 		return alg == aws.StringValue(rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm)
 	})
 	return e
@@ -106,6 +111,9 @@ func (e *Encryption) Alg(alg string) *Encryption {
 // provided is the expected KMSMasterKeyID value
 func (e *Encryption) ID(id string) *Encryption {
 	e.filters = append(e.filters, func(rule *s3.ServerSideEncryptionRule) bool {
+		shared.Debugf("%s == %s -> %t\n",
+			id, aws.StringValue(rule.ApplyServerSideEncryptionByDefault.KMSMasterKeyID),
+			id == aws.StringValue(rule.ApplyServerSideEncryptionByDefault.KMSMasterKeyID))
 		return id == aws.StringValue(rule.ApplyServerSideEncryptionByDefault.KMSMasterKeyID)
 	})
 	return e
@@ -119,15 +127,21 @@ func (e *Encryption) filter(rules []*s3.ServerSideEncryptionRule) (result []*s3.
 			return nil, err
 		}
 	}
+	shared.Debugf("len(rules) = %d, len(e.filters) = %d\n", len(rules), len(e.filters))
 outer:
-	for _, rule := range rules {
-		for _, f := range e.filters {
+	for x, rule := range rules {
+		shared.Debugf("rules(%d):\n", x)
+		shared.Dump(rule)
+		for xx, f := range e.filters {
 			if !f(rule) {
 				continue outer
 			}
+			shared.Debugf("rules(%d) matched filters(%d)\n", x, xx)
 		}
+		shared.Debugf("storing rules(%d)\n", x)
 		result = append(result, rule)
 	}
+	shared.Dump(result)
 	return
 }
 

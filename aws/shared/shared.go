@@ -6,6 +6,7 @@ import "strings"
 // where 'a' is the authoritative slice
 func StringSliceEqual(a []string, b []string) bool {
 	if len(a) != len(b) {
+		Debugf("match failed at length check -> %d != %d\n", len(a), len(b))
 		return false
 	}
 outer:
@@ -15,6 +16,7 @@ outer:
 				continue outer
 			}
 		}
+		Debugf("matched failed at [a(%d): %s]\n", i, a[i])
 		return false
 	}
 	return true

@@ -9,24 +9,24 @@ import (
 
 func TestPolicy(t *testing.T) {
 	policies := []*iam.Policy{
-		{Arn: aws.String("a"), PolicyName: aws.String("b"), PolicyId: aws.String("c")},
-		{Arn: aws.String("a"), PolicyName: aws.String("b"), PolicyId: aws.String("d")},
-		{Arn: aws.String("a"), PolicyName: aws.String("b"), PolicyId: aws.String("e")},
+		{Arn: aws.String("a"), PolicyId: aws.String("b"), PolicyName: aws.String("c")},
+		{Arn: aws.String("a"), PolicyId: aws.String("b"), PolicyName: aws.String("d")},
+		{Arn: aws.String("a"), PolicyId: aws.String("b"), PolicyName: aws.String("e")},
 	}
 
 	expected := "c"
-	result := New(nil).Arn("a").Name("b").ID("c").Assert(t, policies...).Selected()
+	result := New(nil).Arn("a").ID("b").Name("c").Assert(t, policies...).Selected()
 	if result == nil {
 		t.Fatal("policy was nil")
 	}
-	if aws.StringValue(result.PolicyId) != expected {
-		t.Errorf("policyID invalid, expected: %q, got: %q", expected, aws.StringValue(result.PolicyId))
+	if aws.StringValue(result.PolicyName) != expected {
+		t.Errorf("policyName invalid, expected: %q, got: %q", expected, aws.StringValue(result.PolicyName))
 	}
-	result = New(nil).Arn("a").Name("b").First(t, policies...).Selected()
+	result = New(nil).Arn("a").ID("b").First(t, policies...).Selected()
 	if result == nil {
 		t.Fatal("policy was nil")
 	}
-	if aws.StringValue(result.PolicyId) != expected {
-		t.Errorf("policyID invalid, expected: %q, got: %q", expected, aws.StringValue(result.PolicyId))
+	if aws.StringValue(result.PolicyName) != expected {
+		t.Errorf("policyName invalid, expected: %q, got: %q", expected, aws.StringValue(result.PolicyName))
 	}
 }

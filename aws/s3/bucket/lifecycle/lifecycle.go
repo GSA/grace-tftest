@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/GSA/grace-tftest/aws/shared"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -46,7 +47,7 @@ func (l *Lifecycle) Assert(t *testing.T, rules ...*s3.LifecycleRule) *Lifecycle 
 	switch n := len(rules); {
 	case n == 0:
 		t.Error("no matching lifecycle rule was found")
-	case n > 0:
+	case n > 1:
 		t.Error("more than one matching lifecycle rule was found")
 	default:
 		l.rule = rules[0]
@@ -87,6 +88,7 @@ func (l *Lifecycle) Filter(filter Filter) *Lifecycle {
 // an Expiration set
 func (l *Lifecycle) IsExp() *Lifecycle {
 	l.filters = append(l.filters, func(rule *s3.LifecycleRule) bool {
+		shared.Debugf("%#v != nil -> %t\n", rule.Expiration, rule.Expiration != nil)
 		return rule.Expiration != nil
 	})
 	return l
@@ -97,7 +99,8 @@ func (l *Lifecycle) IsExp() *Lifecycle {
 // provided is the expected Prefix value
 func (l *Lifecycle) FilterPrefix(value string) *Lifecycle {
 	l.filters = append(l.filters, func(rule *s3.LifecycleRule) bool {
-		return aws.StringValue(rule.Filter.Prefix) == value
+		shared.Debugf("%s == %s -> %t\n", value, aws.StringValue(rule.Filter.Prefix), value == aws.StringValue(rule.Filter.Prefix))
+		return value == aws.StringValue(rule.Filter.Prefix)
 	})
 	return l
 }
@@ -107,8 +110,12 @@ func (l *Lifecycle) FilterPrefix(value string) *Lifecycle {
 // provided is the expected Tag key and value
 func (l *Lifecycle) FilterTag(key, value string) *Lifecycle {
 	l.filters = append(l.filters, func(rule *s3.LifecycleRule) bool {
-		return aws.StringValue(rule.Filter.Tag.Key) == key &&
-			aws.StringValue(rule.Filter.Tag.Value) == value
+		shared.Debugf("%s == %s -> %t\n%s == %s -> %t",
+			key, aws.StringValue(rule.Filter.Tag.Key), key == aws.StringValue(rule.Filter.Tag.Key),
+			value, aws.StringValue(rule.Filter.Tag.Value), value == aws.StringValue(rule.Filter.Tag.Value))
+
+		return key == aws.StringValue(rule.Filter.Tag.Key) &&
+			value == aws.StringValue(rule.Filter.Tag.Value)
 	})
 	return l
 }
@@ -127,10 +134,12 @@ func (l *Lifecycle) FilterAnd(prefix string, tag ...*s3.Tag) *Lifecycle {
 				}
 			}
 			if !found {
+				shared.Debugf("tag[Key: %s, Value: %s] not found\n", aws.StringValue(t.Key), aws.StringValue(t.Value))
 				return false
 			}
 		}
-		return aws.StringValue(rule.Filter.And.Prefix) == prefix
+		shared.Debugf("Prefix %s == %s -> %t\n", prefix, aws.StringValue(rule.Filter.And.Prefix), prefix == aws.StringValue(rule.Filter.And.Prefix))
+		return prefix == aws.StringValue(rule.Filter.And.Prefix)
 	})
 	return l
 }
@@ -140,6 +149,7 @@ func (l *Lifecycle) FilterAnd(prefix string, tag ...*s3.Tag) *Lifecycle {
 // provided is the expected Status value
 func (l *Lifecycle) Status(status string) *Lifecycle {
 	l.filters = append(l.filters, func(rule *s3.LifecycleRule) bool {
+		shared.Debugf("%s == %s -> %t\n", status, aws.StringValue(rule.Status), status == aws.StringValue(rule.Status))
 		return status == aws.StringValue(rule.Status)
 	})
 	return l
@@ -150,6 +160,7 @@ func (l *Lifecycle) Status(status string) *Lifecycle {
 // provided is the expected ID value
 func (l *Lifecycle) Method(method string) *Lifecycle {
 	l.filters = append(l.filters, func(rule *s3.LifecycleRule) bool {
+		shared.Debugf("%s == %s -> %t\n", method, aws.StringValue(rule.ID), method == aws.StringValue(rule.ID))
 		return method == aws.StringValue(rule.ID)
 	})
 	return l
@@ -160,6 +171,7 @@ func (l *Lifecycle) Method(method string) *Lifecycle {
 // provided is the expected Expiration Date value
 func (l *Lifecycle) ExpDate(date time.Time) *Lifecycle {
 	l.filters = append(l.filters, func(rule *s3.LifecycleRule) bool {
+		shared.Debugf("%s == %s -> %t\n", date, aws.TimeValue(rule.Expiration.Date), date == aws.TimeValue(rule.Expiration.Date))
 		return date == aws.TimeValue(rule.Expiration.Date)
 	})
 	return l
@@ -170,6 +182,7 @@ func (l *Lifecycle) ExpDate(date time.Time) *Lifecycle {
 // provided is the expected Expiration Days value
 func (l *Lifecycle) ExpDays(days int64) *Lifecycle {
 	l.filters = append(l.filters, func(rule *s3.LifecycleRule) bool {
+		shared.Debugf("%d == %d -> %t\n", days, aws.Int64Value(rule.Expiration.Days), days == aws.Int64Value(rule.Expiration.Days))
 		return days == aws.Int64Value(rule.Expiration.Days)
 	})
 	return l
@@ -183,15 +196,21 @@ func (l *Lifecycle) filter(rules []*s3.LifecycleRule) (result []*s3.LifecycleRul
 			return nil, err
 		}
 	}
+	shared.Debugf("len(rules) = %d, len(l.filters) = %d\n", len(rules), len(l.filters))
 outer:
-	for _, rule := range rules {
-		for _, f := range l.filters {
+	for x, rule := range rules {
+		shared.Debugf("rules(%d):\n", x)
+		shared.Dump(rule)
+		for xx, f := range l.filters {
 			if !f(rule) {
 				continue outer
 			}
+			shared.Debugf("rules(%d) matched filters(%d)\n", x, xx)
 		}
+		shared.Debugf("storing configs(%d)\n", x)
 		result = append(result, rule)
 	}
+	shared.Dump(result)
 	return
 }
 
