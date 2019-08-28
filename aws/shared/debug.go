@@ -33,6 +33,8 @@ func setDebugWriter(w io.Writer) {
 	muWriter.Unlock()
 }
 
+// Debugf writes the formatted value of args into the
+// debugWriter (default: os.Stdout)
 func Debugf(format string, args ...interface{}) {
 	if !isDebug {
 		return
@@ -40,6 +42,8 @@ func Debugf(format string, args ...interface{}) {
 	debug(fmt.Sprintf(format, args...))
 }
 
+// Debugf writes the value of data to the debugWriter
+// (default: os.Stdout)
 func Debug(data string) {
 	if !isDebug {
 		return
@@ -47,6 +51,8 @@ func Debug(data string) {
 	debug(data)
 }
 
+// Dump writes the pretty-printed values of v to the
+// debugWriter (default: os.Stdout)
 func Dump(v ...interface{}) {
 	if !isDebug {
 		return
