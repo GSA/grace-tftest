@@ -9,12 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-// Filter is an interface for filtering *Configuration objects
-type Filter func(*Configuration) bool
-
 // Notification contains the necessary properties for filtering *Configuration objects
 type Notification struct {
-	filters []Filter
+	filters []shared.Filter
 	client  client.ConfigProvider
 	config  *Configuration
 	name    string
@@ -52,7 +49,7 @@ func (n *Notification) Assert(t *testing.T, configs ...*Configuration) *Notifica
 		n.config = configs[0]
 	}
 
-	n.filters = []Filter{}
+	n.filters = []shared.Filter{}
 	return n
 }
 
@@ -72,12 +69,12 @@ func (n *Notification) First(t *testing.T, configs ...*Configuration) *Notificat
 		n.config = configs[0]
 	}
 
-	n.filters = []Filter{}
+	n.filters = []shared.Filter{}
 	return n
 }
 
 // Filter adds the 'filter' provided to the filter list
-func (n *Notification) Filter(filter Filter) *Notification {
+func (n *Notification) Filter(filter shared.Filter) *Notification {
 	n.filters = append(n.filters, filter)
 	return n
 }
@@ -86,7 +83,11 @@ func (n *Notification) Filter(filter Filter) *Notification {
 // the Arn filter: filters configs by Arn where 'arn' provided
 // is the expected Arn value
 func (n *Notification) Arn(arn string) *Notification {
-	n.filters = append(n.filters, func(c *Configuration) bool {
+	n.filters = append(n.filters, func(v interface{}) bool {
+		c := convert(v)
+		if c == nil {
+			return false
+		}
 		shared.Debugf("%s == %s -> %t\n", arn, c.Arn, arn == c.Arn)
 		return arn == c.Arn
 	})
@@ -97,7 +98,11 @@ func (n *Notification) Arn(arn string) *Notification {
 // the ID filter: filters configs by ID where 'id' provided
 // is the expected ID value
 func (n *Notification) ID(id string) *Notification {
-	n.filters = append(n.filters, func(c *Configuration) bool {
+	n.filters = append(n.filters, func(v interface{}) bool {
+		c := convert(v)
+		if c == nil {
+			return false
+		}
 		shared.Debugf("%s == %s -> %t\n", id, c.ID, id == c.ID)
 		return id == c.ID
 	})
@@ -108,7 +113,11 @@ func (n *Notification) ID(id string) *Notification {
 // the Events filter: filters configs by Events where 'event' provided
 // is the expected Events value
 func (n *Notification) Events(event ...string) *Notification {
-	n.filters = append(n.filters, func(c *Configuration) bool {
+	n.filters = append(n.filters, func(v interface{}) bool {
+		c := convert(v)
+		if c == nil {
+			return false
+		}
 		shared.Debugf("%v == %v\n", event, c.Events)
 		return shared.StringSliceEqual(event, c.Events)
 	})
@@ -119,7 +128,11 @@ func (n *Notification) Events(event ...string) *Notification {
 // the Rule filter: filters configs by FilterRule where 'name and value' provided
 // is the expected FilterRule name and value
 func (n *Notification) Rule(name, value string) *Notification {
-	n.filters = append(n.filters, func(c *Configuration) bool {
+	n.filters = append(n.filters, func(v interface{}) bool {
+		c := convert(v)
+		if c == nil {
+			return false
+		}
 		shared.Debugf("len(c.Filter) = %d", len(c.Filter))
 		for _, f := range c.Filter {
 			shared.Debugf("Name: %s == %s -> %t, Value: %s == %s -> %t\n",
@@ -151,29 +164,15 @@ func (n *Notification) Suffix(value string) *Notification {
 	return n.Rule(strBucketSuffix, value)
 }
 
-func (n *Notification) filter(configs []*Configuration) (result []*Configuration, err error) {
+func (n *Notification) filter(configs []*Configuration) ([]*Configuration, error) {
 	if len(configs) == 0 {
+		var err error
 		configs, err = n.configs()
 		if err != nil {
 			return nil, err
 		}
 	}
-	shared.Debugf("len(configs) = %d, len(n.filters) = %d\n", len(configs), len(n.filters))
-outer:
-	for x, config := range configs {
-		shared.Debugf("configs(%d):\n", x)
-		shared.Dump(configs)
-		for xx, f := range n.filters {
-			if !f(config) {
-				continue outer
-			}
-			shared.Debugf("configs(%d) matched filters(%d)\n", x, xx)
-		}
-		shared.Debugf("storing configs(%d)\n", x)
-		result = append(result, config)
-	}
-	shared.Dump(result)
-	return
+	return fromIface(shared.GenericFilter(n.filters, toIface(configs))), nil
 }
 
 // Configuration ... is a generic structure used for normalizing
@@ -259,6 +258,32 @@ func convertFilterRules(in []*s3.FilterRule) (out []*FilterRule) {
 			Name:  aws.StringValue(i.Name),
 			Value: aws.StringValue(i.Value),
 		})
+	}
+	return
+}
+
+func convert(v interface{}) *Configuration {
+	statement, ok := v.(*Configuration)
+	if !ok {
+		shared.Debugf("object not convertible to *Configuration: ")
+		shared.Dump(v)
+		return nil
+	}
+	return statement
+}
+func toIface(in []*Configuration) (out []interface{}) {
+	for _, i := range in {
+		out = append(out, i)
+	}
+	return
+}
+func fromIface(in []interface{}) (out []*Configuration) {
+	for _, i := range in {
+		v := convert(i)
+		if v == nil {
+			continue
+		}
+		out = append(out, v)
 	}
 	return
 }

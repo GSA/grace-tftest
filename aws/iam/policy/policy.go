@@ -154,7 +154,7 @@ func (p *Policy) policies() ([]*iam.Policy, error) {
 func convert(v interface{}) *iam.Policy {
 	statement, ok := v.(*iam.Policy)
 	if !ok {
-		shared.Debugf("object not convertible to *policy.Statement: ")
+		shared.Debugf("object not convertible to *iam.Policy: ")
 		shared.Dump(v)
 		return nil
 	}
