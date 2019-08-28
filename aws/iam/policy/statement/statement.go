@@ -49,11 +49,12 @@ func (s *Statement) Assert(t *testing.T, statements ...*policy.Statement) *State
 		t.Error(err)
 	}
 
-	if len(statements) == 0 {
+	switch l := len(statements); {
+	case l == 0:
 		t.Error("no matching statement was found")
-	} else if len(statements) > 1 {
+	case l > 0:
 		t.Error("more than one matching statement was found")
-	} else {
+	default:
 		s.statement = statements[0]
 	}
 

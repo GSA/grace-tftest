@@ -43,11 +43,12 @@ func (n *Notification) Assert(t *testing.T, configs ...*Configuration) *Notifica
 		t.Error(err)
 	}
 
-	if len(configs) == 0 {
+	switch l := len(configs); {
+	case l == 0:
 		t.Error("no matching configuration was found")
-	} else if len(configs) > 1 {
+	case l > 0:
 		t.Error("more than one matching configuration was found")
-	} else {
+	default:
 		n.config = configs[0]
 	}
 

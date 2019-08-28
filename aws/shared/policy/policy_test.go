@@ -3,6 +3,8 @@ package policy
 import (
 	"fmt"
 	"testing"
+
+	"github.com/GSA/grace-tftest/aws/shared"
 )
 
 const unmarshaltest1 = `
@@ -21,6 +23,7 @@ const unmarshaltest1 = `
   }
 `
 
+// nolint: gocyclo
 func TestUnmarshal(t *testing.T) {
 	got, err := Unmarshal(unmarshaltest1)
 	if err != nil {
@@ -54,7 +57,7 @@ func TestUnmarshal(t *testing.T) {
 		if g.Sid != exp.Statement[i].Sid {
 			t.Errorf("policy.statement[%d].sid does not match, expected: %s, got: %s", i, exp.Statement[i].Sid, g.Sid)
 		}
-		if !stringSliceEqual(g.Action, exp.Statement[i].Action) {
+		if !shared.StringSliceEqual(g.Action, exp.Statement[i].Action) {
 			t.Errorf("policy.statement[%d].action does not match, expected: %v, got: %v", i, exp.Statement[i].Action, g.Action)
 		}
 		if g.Effect != exp.Statement[i].Effect {
@@ -63,10 +66,10 @@ func TestUnmarshal(t *testing.T) {
 		if g.Principal.Type != exp.Statement[i].Principal.Type {
 			t.Errorf("policy.statement[%d].principal.type does not match, expected: %s, got: %s", i, exp.Statement[i].Principal.Type, g.Principal.Type)
 		}
-		if !stringSliceEqual(g.Principal.Values, exp.Statement[i].Principal.Values) {
+		if !shared.StringSliceEqual(g.Principal.Values, exp.Statement[i].Principal.Values) {
 			t.Errorf("policy.statement[%d].principal.values do not match, expected: %v, got: %v", i, exp.Statement[i].Principal.Values, g.Principal.Values)
 		}
-		if !stringSliceEqual(g.Resource, exp.Statement[i].Resource) {
+		if !shared.StringSliceEqual(g.Resource, exp.Statement[i].Resource) {
 			t.Errorf("policy.statement[%d].resource does not match, expected: %v, got: %v", i, exp.Statement[i].Resource, g.Resource)
 		}
 		if len(g.Condition) != len(exp.Statement[i].Condition) {
@@ -85,7 +88,7 @@ func hasCondition(statement *Statement, operator string, property string, value 
 	for _, c := range statement.Condition {
 		if c.Operator == operator &&
 			c.Property == property &&
-			stringSliceEqual(c.Value, value) {
+			shared.StringSliceEqual(c.Value, value) {
 			return nil
 		}
 	}

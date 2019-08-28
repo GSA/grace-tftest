@@ -42,11 +42,12 @@ func (e *Encryption) Assert(t *testing.T, rules ...*s3.ServerSideEncryptionRule)
 		t.Error(err)
 	}
 
-	if len(rules) == 0 {
+	switch l := len(rules); {
+	case l == 0:
 		t.Error("no matching lifecycle rule was found")
-	} else if len(rules) > 1 {
+	case l > 0:
 		t.Error("more than one matching lifecycle rule was found")
-	} else {
+	default:
 		e.rule = rules[0]
 	}
 

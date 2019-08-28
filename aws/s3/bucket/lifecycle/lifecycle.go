@@ -43,11 +43,12 @@ func (l *Lifecycle) Assert(t *testing.T, rules ...*s3.LifecycleRule) *Lifecycle 
 		t.Error(err)
 	}
 
-	if len(rules) == 0 {
+	switch n := len(rules); {
+	case n == 0:
 		t.Error("no matching lifecycle rule was found")
-	} else if len(rules) > 1 {
+	case n > 0:
 		t.Error("more than one matching lifecycle rule was found")
-	} else {
+	default:
 		l.rule = rules[0]
 	}
 

@@ -4,10 +4,10 @@ import (
 	"testing"
 )
 
-var bucketName = ""
-var keyID = ""
-var keyAlg = ""
-var lambdaArn = ""
+// var bucketName = ""
+// var keyID = ""
+// var keyAlg = ""
+// var lambdaArn = ""
 
 func TestAll(t *testing.T) {
 	/*

@@ -45,11 +45,12 @@ func (p *Policy) Assert(t *testing.T, policies ...*iam.Policy) *Policy {
 		t.Error(err)
 	}
 
-	if len(policies) == 0 {
+	switch l := len(policies); {
+	case l == 0:
 		t.Error("no matching policy was found")
-	} else if len(policies) > 1 {
+	case l > 0:
 		t.Error("more than one matching policy was found")
-	} else {
+	default:
 		p.policy = policies[0]
 	}
 
@@ -82,10 +83,7 @@ func (p *Policy) First(t *testing.T, policies ...*iam.Policy) *Policy {
 // is the expected Arn value
 func (p *Policy) Arn(arn string) *Policy {
 	p.filters = append(p.filters, func(policy *iam.Policy) bool {
-		if arn == aws.StringValue(policy.Arn) {
-			return true
-		}
-		return false
+		return arn == aws.StringValue(policy.Arn)
 	})
 	return p
 }
@@ -101,10 +99,7 @@ func (p *Policy) Filter(filter Filter) *Policy {
 // is the expected PolicyId value
 func (p *Policy) ID(id string) *Policy {
 	p.filters = append(p.filters, func(policy *iam.Policy) bool {
-		if id == aws.StringValue(policy.PolicyId) {
-			return true
-		}
-		return false
+		return id == aws.StringValue(policy.PolicyId)
 	})
 	return p
 }
@@ -114,10 +109,7 @@ func (p *Policy) ID(id string) *Policy {
 // is the expected PolicyName value
 func (p *Policy) Name(name string) *Policy {
 	p.filters = append(p.filters, func(policy *iam.Policy) bool {
-		if name == aws.StringValue(policy.PolicyName) {
-			return true
-		}
-		return false
+		return name == aws.StringValue(policy.PolicyName)
 	})
 	return p
 }

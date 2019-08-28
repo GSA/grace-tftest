@@ -17,7 +17,6 @@ type checkFunc func() error
 type Bucket struct {
 	client  client.ConfigProvider
 	checker checkFunc
-	bucket  *s3.Bucket
 	name    string
 }
 
