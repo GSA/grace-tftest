@@ -228,14 +228,14 @@ func (s *Statement) policyDocument(p *iam.Policy) (*policy.Document, error) {
 	return doc, nil
 }
 
-func convert(v interface{}) *policy.Statement {
-	statement, ok := v.(*policy.Statement)
+func convert(in interface{}) *policy.Statement {
+	out, ok := in.(*policy.Statement)
 	if !ok {
 		shared.Debugf("object not convertible to *policy.Statement: ")
-		shared.Dump(v)
+		shared.Dump(in)
 		return nil
 	}
-	return statement
+	return out
 }
 func toIface(in []*policy.Statement) (out []interface{}) {
 	for _, i := range in {

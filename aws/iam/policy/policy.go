@@ -151,14 +151,14 @@ func (p *Policy) policies() ([]*iam.Policy, error) {
 	return policies, nil
 }
 
-func convert(v interface{}) *iam.Policy {
-	statement, ok := v.(*iam.Policy)
+func convert(in interface{}) *iam.Policy {
+	out, ok := in.(*iam.Policy)
 	if !ok {
 		shared.Debugf("object not convertible to *iam.Policy: ")
-		shared.Dump(v)
+		shared.Dump(in)
 		return nil
 	}
-	return statement
+	return out
 }
 func toIface(in []*iam.Policy) (out []interface{}) {
 	for _, i := range in {
