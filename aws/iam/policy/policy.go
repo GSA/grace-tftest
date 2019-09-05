@@ -3,8 +3,9 @@ package policy
 import (
 	"testing"
 
-	"github.com/GSA/grace-tftest/aws/iam/policy/statement"
 	"github.com/GSA/grace-tftest/aws/shared"
+	"github.com/GSA/grace-tftest/aws/shared/policy"
+	"github.com/GSA/grace-tftest/aws/shared/policy/statement"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -28,9 +29,13 @@ func (p *Policy) Selected() *iam.Policy {
 }
 
 // Statement returns a newly instantiated *statement.Statement object
-// this is used for filtering by statements inside a policy
-func (p *Policy) Statement(t *testing.T) *statement.Statement {
-	return statement.New(p.client, p.policy)
+// this is used for filtering by statements inside a policy. If doc is nil
+// the default policy document will be retrieved from AWS
+func (p *Policy) Statement(t *testing.T, doc *policy.Document) *statement.Statement {
+	if doc == nil {
+		doc = p.Document(t, "")
+	}
+	return statement.New(doc)
 }
 
 // Assert applies all filters that have been called, resets the list of filters,
@@ -125,6 +130,34 @@ func (p *Policy) Name(name string) *Policy {
 		return name == aws.StringValue(policy.PolicyName)
 	})
 	return p
+}
+
+// Document returns the unmarshaled policy document
+// if versionID is empty, will return the default version
+func (p *Policy) Document(t *testing.T, versionID string) *policy.Document {
+	if p.policy == nil {
+		t.Errorf("policy was nil")
+		return nil
+	}
+	input := &iam.GetPolicyVersionInput{
+		PolicyArn: p.policy.Arn,
+		VersionId: p.policy.DefaultVersionId,
+	}
+	if len(versionID) > 0 {
+		input.VersionId = &versionID
+	}
+	svc := iam.New(p.client)
+	result, err := svc.GetPolicyVersion(input)
+	if err != nil {
+		t.Errorf("failed to locate policy version with id: %q, for arn: %q", aws.StringValue(input.VersionId), aws.StringValue(input.PolicyArn))
+		return nil
+	}
+	doc, err := policy.Unmarshal(aws.StringValue(result.PolicyVersion.Document))
+	if err != nil {
+		t.Errorf("failed to unmarshal policy document: %v", err)
+		return nil
+	}
+	return doc
 }
 
 func (p *Policy) filter(policies []*iam.Policy) ([]*iam.Policy, error) {

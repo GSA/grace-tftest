@@ -1,32 +1,25 @@
 package statement
 
 import (
-	"errors"
-	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/GSA/grace-tftest/aws/shared"
 	"github.com/GSA/grace-tftest/aws/shared/policy"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/client"
-	"github.com/aws/aws-sdk-go/service/iam"
 )
 
 // Statement stores necessary objects for
 // filtering *PolicyStatement objects
 type Statement struct {
 	filters   []shared.Filter
-	client    client.ConfigProvider
-	policy    *iam.Policy
+	doc       *policy.Document
 	statement *policy.Statement
 }
 
 // New returns a new *Statement
-func New(client client.ConfigProvider, policy *iam.Policy) *Statement {
+func New(doc *policy.Document) *Statement {
 	return &Statement{
-		client: client,
-		policy: policy,
+		doc: doc,
 	}
 }
 
@@ -36,15 +29,10 @@ func (s *Statement) Selected() *policy.Statement {
 }
 
 // Assert executes the filter list against all *policy.Statement objects
-// if none are provided, they will be gathered from the *iam.Policy provided to New()
-// it will reset the filter list, fail the test if there is not exactly one match
-// and store the match
-func (s *Statement) Assert(t *testing.T, statements ...*policy.Statement) *Statement {
-	var err error
-	statements, err = s.filter(statements)
-	if err != nil {
-		t.Error(err)
-	}
+// inside the doc provided to New(), next it will reset the filter list,
+// fail the test if there is not exactly one match and store the match
+func (s *Statement) Assert(t *testing.T) *Statement {
+	statements := s.filter()
 
 	switch l := len(statements); {
 	case l == 0:
@@ -60,14 +48,10 @@ func (s *Statement) Assert(t *testing.T, statements ...*policy.Statement) *State
 }
 
 // First executes the filter list against all *policy.Statement objects
-// if none are provided, they will be gathered from the *iam.Policy provided to New()
-// it will reset the filter list, fail the test if there no match, and store the first match
-func (s *Statement) First(t *testing.T, statements ...*policy.Statement) *Statement {
-	var err error
-	statements, err = s.filter(statements)
-	if err != nil {
-		t.Error(err)
-	}
+// inside the doc provided to New(), it will reset the filter list,
+// fail the test if there no match, and store the first match
+func (s *Statement) First(t *testing.T) *Statement {
+	statements := s.filter()
 
 	if len(statements) == 0 {
 		t.Error("no matching statement was found")
@@ -189,43 +173,8 @@ func (s *Statement) Condition(operator string, property string, value ...string)
 	return s
 }
 
-func (s *Statement) filter(statements []*policy.Statement) ([]*policy.Statement, error) {
-	if len(statements) == 0 {
-		var err error
-		statements, err = s.statements()
-		if err != nil {
-			return nil, err
-		}
-	}
-	return fromIface(shared.GenericFilter(s.filters, toIface(statements))), nil
-}
-
-func (s *Statement) statements() ([]*policy.Statement, error) {
-	document, err := s.policyDocument(s.policy)
-	if err != nil {
-		return nil, err
-	}
-	return document.Statement, nil
-}
-
-// policyDocument ... retrieves the policy document matching the given arn and version
-func (s *Statement) policyDocument(p *iam.Policy) (*policy.Document, error) {
-	if p == nil {
-		return nil, errors.New("policy was nil")
-	}
-	svc := iam.New(s.client)
-	result, err := svc.GetPolicyVersion(&iam.GetPolicyVersionInput{
-		PolicyArn: p.Arn,
-		VersionId: p.DefaultVersionId,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to locate policy version with id: %q, for arn: %q", aws.StringValue(p.DefaultVersionId), aws.StringValue(p.Arn))
-	}
-	doc, err := policy.Unmarshal(aws.StringValue(result.PolicyVersion.Document))
-	if err != nil {
-		return nil, err
-	}
-	return doc, nil
+func (s *Statement) filter() []*policy.Statement {
+	return fromIface(shared.GenericFilter(s.filters, toIface(s.doc.Statement)))
 }
 
 func convert(in interface{}) *policy.Statement {
