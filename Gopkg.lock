@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:74c09baf3dedd231482591f91685ac4197d1ff5a9c734aca81f5c86d64792665"
+  digest = "1:6782260eeea6500e6415f0f1c5d5fb8f0979749b32b3f73eb3da026891ff6cc7"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -10,26 +10,17 @@
     "aws/awsutil",
     "aws/client",
     "aws/client/metadata",
-    "aws/corehandlers",
     "aws/credentials",
-    "aws/credentials/ec2rolecreds",
-    "aws/credentials/endpointcreds",
-    "aws/credentials/stscreds",
-    "aws/csm",
-    "aws/defaults",
-    "aws/ec2metadata",
     "aws/endpoints",
     "aws/request",
-    "aws/session",
     "aws/signer/v4",
     "internal/ini",
     "internal/s3err",
     "internal/sdkio",
+    "internal/sdkmath",
     "internal/sdkrand",
-    "internal/sdkuri",
     "internal/shareddefaults",
     "private/protocol",
-    "private/protocol/ec2query",
     "private/protocol/eventstream",
     "private/protocol/eventstream/eventstreamapi",
     "private/protocol/json/jsonutil",
@@ -40,134 +31,43 @@
     "private/protocol/restjson",
     "private/protocol/restxml",
     "private/protocol/xml/xmlutil",
-    "service/acm",
-    "service/autoscaling",
     "service/cloudwatchevents",
-    "service/cloudwatchlogs",
-    "service/ec2",
     "service/iam",
     "service/kms",
     "service/lambda",
-    "service/rds",
     "service/s3",
-    "service/s3/s3iface",
-    "service/s3/s3manager",
-    "service/sns",
-    "service/sqs",
-    "service/sts",
   ]
   pruneopts = "UT"
-  revision = "ceab7b7ac6f535d1397f124620720b5145f1ad59"
-  version = "v1.15.88"
+  revision = "4651c2a344e90782ae06c956a5b0edcae3ae21d0"
+  version = "v1.23.16"
 
 [[projects]]
-  digest = "1:7b94d37d65c0445053c6f3e73090e3966c1c29127035492c349e14f25c440359"
-  name = "github.com/boombuler/barcode"
-  packages = [
-    ".",
-    "qr",
-    "utils",
-  ]
+  digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
   pruneopts = "UT"
-  revision = "3cfea5ab600ae37946be2b763b8ec2c1cf2d272d"
-  version = "v1.0.0"
+  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
+  version = "v1.1.1"
 
 [[projects]]
-  digest = "1:ec6f9bf5e274c833c911923c9193867f3f18788c461f76f05f62bb1510e0ae65"
-  name = "github.com/go-sql-driver/mysql"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "72cd26f257d44c1114970e19afddcd812016007e"
-  version = "v1.4.1"
-
-[[projects]]
-  digest = "1:8f8811f9be822914c3a25c6a071e93beb4c805d7b026cbf298bc577bc1cc945b"
-  name = "github.com/google/uuid"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "064e2069ce9c359c118179501254f67d7d37ba24"
-  version = "0.2"
-
-[[projects]]
-  digest = "1:d3e82e6e75e7eb5e9e3416db641651185fb53ccb16c881a052bfb72aad7ecf07"
-  name = "github.com/gruntwork-io/terratest"
-  packages = [
-    "modules/aws",
-    "modules/collections",
-    "modules/customerrors",
-    "modules/files",
-    "modules/logger",
-    "modules/random",
-    "modules/retry",
-    "modules/ssh",
-  ]
-  pruneopts = "UT"
-  revision = "98d88f765d58ca34fbb8ac24cf20ff31a42d9667"
-  version = "v0.13.14"
-
-[[projects]]
-  digest = "1:e22af8c7518e1eab6f2eab2b7d7558927f816262586cd6ed9f349c97a6c285c4"
+  digest = "1:bb81097a5b62634f3e9fec1014657855610c82d19b9a40c17612e32651e35dca"
   name = "github.com/jmespath/go-jmespath"
   packages = ["."]
   pruneopts = "UT"
-  revision = "0b12d6b5"
-
-[[projects]]
-  digest = "1:6c7a3f738e37a1c7ad3d56122a34932140654d51a57e01f8613cdf3eaf050911"
-  name = "github.com/pquerna/otp"
-  packages = [
-    ".",
-    "hotp",
-    "totp",
-  ]
-  pruneopts = "UT"
-  revision = "b7b89250c468c06871d3837bee02e2d5c155ae19"
-  version = "v1.0.0"
-
-[[projects]]
-  branch = "master"
-  digest = "1:a741998d8633b7f444053abdf218de3d8f66dc02f832e182b983b80f8c7ba852"
-  name = "golang.org/x/crypto"
-  packages = [
-    "curve25519",
-    "ed25519",
-    "ed25519/internal/edwards25519",
-    "internal/chacha20",
-    "internal/subtle",
-    "poly1305",
-    "ssh",
-    "ssh/agent",
-  ]
-  pruneopts = "UT"
-  revision = "eb0de9b17e854e9b1ccd9963efafc79862359959"
-
-[[projects]]
-  branch = "master"
-  digest = "1:76ee51c3f468493aff39dbacc401e8831fbb765104cbf613b89bef01cf4bad70"
-  name = "golang.org/x/net"
-  packages = ["context"]
-  pruneopts = "UT"
-  revision = "351d144fa1fc0bd934e2408202be0c29f25e35a0"
-
-[[projects]]
-  digest = "1:c25289f43ac4a68d88b02245742347c94f1e108c534dda442188015ff80669b3"
-  name = "google.golang.org/appengine"
-  packages = ["cloudsql"]
-  pruneopts = "UT"
-  revision = "4a4468ece617fc8205e99368fa2200e9d1fad421"
-  version = "v1.3.0"
+  revision = "c2b33e84"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
     "github.com/aws/aws-sdk-go/aws",
+    "github.com/aws/aws-sdk-go/aws/client",
     "github.com/aws/aws-sdk-go/service/cloudwatchevents",
     "github.com/aws/aws-sdk-go/service/iam",
     "github.com/aws/aws-sdk-go/service/kms",
     "github.com/aws/aws-sdk-go/service/lambda",
     "github.com/aws/aws-sdk-go/service/s3",
-    "github.com/gruntwork-io/terratest/modules/aws",
+    "github.com/davecgh/go-spew/spew",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

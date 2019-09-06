@@ -1,4 +1,4 @@
-# GRACE Terraform Test [![CircleCI](https://circleci.com/gh/GSA/grace-tftest.svg?style=svg)](https://circleci.com/gh/GSA/grace-tftest)
+# GRACE Terraform Test [![License](https://img.shields.io/badge/license-CC0-blue)](LICENSE.md) [![GoDoc](https://img.shields.io/badge/go-documentation-blue.svg)](https://godoc.org/github.com/GSA/grace-tftest/aws) [![CircleCI](https://circleci.com/gh/GSA/grace-tftest.svg?style=shield)](https://circleci.com/gh/GSA/grace-tftest) [![Go Report Card](https://goreportcard.com/badge/github.com/GSA/grace-tftest)](https://goreportcard.com/report/github.com/GSA/grace-tftest)
 
 ## Repository Contents
 
@@ -10,9 +10,11 @@ To enable debugging, set the `TFTEST_DEBUG` environment variable to `true`
 1. Install system dependencies.
     1. [Go](https://golang.org/)
     1. [Dep](https://golang.github.io/dep/docs/installation.html)
-    1. [Go Meta Linter](https://github.com/alecthomas/gometalinter)
+    1. [GolangCI](https://github.com/golangci/golangci-lint)
     1. [gosec](https://github.com/securego/gosec)
 1. [Configure AWS](https://www.terraform.io/docs/providers/aws/#authentication) with AWS credentials locally.
+
+
 
 
 ## Public domain

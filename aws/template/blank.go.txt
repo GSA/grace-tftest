@@ -1,0 +1,184 @@
+package PACKAGE
+
+import (
+	"testing"
+
+	"github.com/GSA/grace-tftest/aws/iam/policy/statement"
+	"github.com/GSA/grace-tftest/aws/shared"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/client"
+	"github.com/aws/aws-sdk-go/service/iam"
+)
+
+// TYPE: "Policy"
+// RETURN_TYPE: "*iam.Policy"
+// SINGULAR_NAME: "policy"
+// PLURAL_NAME: "PLURAL_NAME"
+// CLASS_POINTER: "p"
+
+// TYPE contains the necessary properties for testing RETURN_TYPE objects
+type TYPE struct {
+	client        client.ConfigProvider
+	SINGULAR_NAME RETURN_TYPE
+	filters       []shared.Filter
+}
+
+// New returns a new *TYPE
+func New(client client.ConfigProvider) *TYPE {
+	return &TYPE{client: client}
+}
+
+// Selected returns the currently selected RETURN_TYPE
+func (CLASS_POINTER *TYPE) Selected() RETURN_TYPE {
+	return CLASS_POINTER.SINGULAR_NAME
+}
+
+// Statement returns a newly instantiated *statement.Statement object
+// this is used for filtering by statements inside a SINGULAR_NAME
+func (CLASS_POINTER *TYPE) Statement(t *testing.T) *statement.Statement {
+	return statement.New(CLASS_POINTER.client, CLASS_POINTER.SINGULAR_NAME)
+}
+
+// Assert applies all filters that have been called, resets the list of filters,
+// fails the test if there is not exactly one match, and stores the matched SINGULAR_NAME
+// if PLURAL_NAME is not provided, RETURN_TYPE objects will be retreived from AWS
+func (CLASS_POINTER *TYPE) Assert(t *testing.T, PLURAL_NAME ...RETURN_TYPE) *TYPE {
+	var err error
+	PLURAL_NAME, err = CLASS_POINTER.filter(PLURAL_NAME)
+	if err != nil {
+		t.Error(err)
+	}
+
+	switch l := len(PLURAL_NAME); {
+	case l == 0:
+		t.Error("no matching SINGULAR_NAME was found")
+	case l > 1:
+		t.Error("more than one matching SINGULAR_NAME was found")
+	default:
+		CLASS_POINTER.SINGULAR_NAME = PLURAL_NAME[0]
+	}
+
+	CLASS_POINTER.filters = []shared.Filter{}
+	return CLASS_POINTER
+}
+
+// First applies all filters that have been called, resets the list of filters,
+// fails the test if there are no matches, and stores the first match
+// if PLURAL_NAME is not provided, RETURN_TYPE objects will be retreived from AWS
+func (CLASS_POINTER *TYPE) First(t *testing.T, PLURAL_NAME ...RETURN_TYPE) *TYPE {
+	var err error
+	PLURAL_NAME, err = CLASS_POINTER.filter(PLURAL_NAME)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(PLURAL_NAME) == 0 {
+		t.Error("no matching SINGULAR_NAME was found")
+	} else {
+		CLASS_POINTER.SINGULAR_NAME = PLURAL_NAME[0]
+	}
+
+	CLASS_POINTER.filters = []shared.Filter{}
+	return CLASS_POINTER
+}
+
+// Arn adds the Arn filter to the filter list
+// the Arn filter: filters PLURAL_NAME by Arn where 'arn' provided
+// is the expected Arn value
+func (CLASS_POINTER *TYPE) Arn(arn string) *TYPE {
+	CLASS_POINTER.filters = append(CLASS_POINTER.filters, func(v interface{}) bool {
+		SINGULAR_NAME := convert(v)
+		if SINGULAR_NAME == nil {
+			return false
+		}
+		shared.Debugf("%s == %s -> %t\n", arn, aws.StringValue(SINGULAR_NAME.Arn), arn == aws.StringValue(SINGULAR_NAME.Arn))
+		return arn == aws.StringValue(SINGULAR_NAME.Arn)
+	})
+	return CLASS_POINTER
+}
+
+// Filter adds the 'filter' provided to the filter list
+func (CLASS_POINTER *TYPE) Filter(filter shared.Filter) *TYPE {
+	CLASS_POINTER.filters = append(CLASS_POINTER.filters, filter)
+	return CLASS_POINTER
+}
+
+// ID adds the ID filter to the filter list
+// the ID filter: filters PLURAL_NAME by ID where 'id' provided
+// is the expected PolicyId value
+func (CLASS_POINTER *TYPE) ID(id string) *TYPE {
+	CLASS_POINTER.filters = append(CLASS_POINTER.filters, func(v interface{}) bool {
+		SINGULAR_NAME := convert(v)
+		if SINGULAR_NAME == nil {
+			return false
+		}
+		shared.Debugf("%s == %s -> %t\n", id, aws.StringValue(SINGULAR_NAME.PolicyId), id == aws.StringValue(SINGULAR_NAME.PolicyId))
+		return id == aws.StringValue(SINGULAR_NAME.PolicyId)
+	})
+	return CLASS_POINTER
+}
+
+// Name adds the Name filter to the filter list
+// the Name filter: filters PLURAL_NAME by Name where 'name' provided
+// is the expected PolicyName value
+func (CLASS_POINTER *TYPE) Name(name string) *TYPE {
+	CLASS_POINTER.filters = append(CLASS_POINTER.filters, func(v interface{}) bool {
+		SINGULAR_NAME := convert(v)
+		if SINGULAR_NAME == nil {
+			return false
+		}
+		shared.Debugf("%s == %s -> %t\n", name, aws.StringValue(SINGULAR_NAME.PolicyName), name == aws.StringValue(SINGULAR_NAME.PolicyName))
+		return name == aws.StringValue(SINGULAR_NAME.PolicyName)
+	})
+	return CLASS_POINTER
+}
+
+func (CLASS_POINTER *TYPE) filter(PLURAL_NAME []RETURN_TYPE) ([]RETURN_TYPE, error) {
+	if len(PLURAL_NAME) == 0 {
+		var err error
+		PLURAL_NAME, err = CLASS_POINTER.PLURAL_NAME()
+		if err != nil {
+			return nil, err
+		}
+	}
+	return fromIface(shared.GenericFilter(CLASS_POINTER.filters, toIface(PLURAL_NAME))), nil
+}
+
+func (CLASS_POINTER *TYPE) PLURAL_NAME() ([]RETURN_TYPE, error) {
+	svc := iam.New(CLASS_POINTER.client)
+	var PLURAL_NAME []RETURN_TYPE
+	err := svc.ListPoliciesPages(&iam.ListPoliciesInput{}, func(out *iam.ListPoliciesOutput, lastPage bool) bool {
+		PLURAL_NAME = append(PLURAL_NAME, out.Policies...)
+		return !lastPage
+	})
+	if err != nil {
+		return nil, err
+	}
+	return PLURAL_NAME, nil
+}
+
+func convert(in interface{}) RETURN_TYPE {
+	out, ok := in.(RETURN_TYPE)
+	if !ok {
+		shared.Debugf("object not convertible to RETURN_TYPE: ")
+		shared.Dump(in)
+		return nil
+	}
+	return out
+}
+func toIface(in []RETURN_TYPE) (out []interface{}) {
+	for _, i := range in {
+		out = append(out, i)
+	}
+	return
+}
+func fromIface(in []interface{}) (out []RETURN_TYPE) {
+	for _, i := range in {
+		v := convert(i)
+		if v == nil {
+			continue
+		}
+		out = append(out, v)
+	}
+	return
+}
