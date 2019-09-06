@@ -46,16 +46,16 @@ func (c *Config) Validator(validator Validator) *Config {
 func (c *Config) Env(key, value string) *Config {
 	c.validators = append(c.validators, func(cfg *lambda.FunctionConfiguration) error {
 		if cfg.Environment == nil {
-			return fmt.Errorf("Env() validator failed: Environment was nil")
+			return fmt.Errorf("validator Env() failed: Environment was nil")
 		}
 		env := aws.StringValueMap(cfg.Environment.Variables)
 		if v, ok := env[key]; ok {
 			if v == value {
 				return nil
 			}
-			return fmt.Errorf("Env() validator failed: Environment.Variables[%q]: %q != %q", key, v, value)
+			return fmt.Errorf("validator Env() failed: Environment.Variables[%q]: %q != %q", key, v, value)
 		}
-		return fmt.Errorf("Env() validator failed: Environment.Variables[%q] does not exist", key)
+		return fmt.Errorf("validator Env() failed: Environment.Variables[%q] does not exist", key)
 	})
 	return c
 }
@@ -65,7 +65,7 @@ func (c *Config) Env(key, value string) *Config {
 func (c *Config) Handler(handler string) *Config {
 	c.validators = append(c.validators, func(cfg *lambda.FunctionConfiguration) error {
 		if handler != aws.StringValue(cfg.Handler) {
-			return fmt.Errorf("Handler() validator failed: %q != %q\n", handler, aws.StringValue(cfg.Handler))
+			return fmt.Errorf("validator Handler() failed: %q != %q", handler, aws.StringValue(cfg.Handler))
 		}
 		return nil
 	})
@@ -77,7 +77,7 @@ func (c *Config) Handler(handler string) *Config {
 func (c *Config) KeyArn(arn string) *Config {
 	c.validators = append(c.validators, func(cfg *lambda.FunctionConfiguration) error {
 		if arn != aws.StringValue(cfg.KMSKeyArn) {
-			return fmt.Errorf("KeyArn() validator failed: %q != %q\n", arn, aws.StringValue(cfg.KMSKeyArn))
+			return fmt.Errorf("validator KeyArn() failed: %q != %q", arn, aws.StringValue(cfg.KMSKeyArn))
 		}
 		return nil
 	})
@@ -89,7 +89,7 @@ func (c *Config) KeyArn(arn string) *Config {
 func (c *Config) Role(role string) *Config {
 	c.validators = append(c.validators, func(cfg *lambda.FunctionConfiguration) error {
 		if role != aws.StringValue(cfg.Role) {
-			return fmt.Errorf("Role() validator failed: %q != %q\n", role, aws.StringValue(cfg.Role))
+			return fmt.Errorf("validator Role() failed: %q != %q", role, aws.StringValue(cfg.Role))
 		}
 		return nil
 	})
@@ -101,7 +101,7 @@ func (c *Config) Role(role string) *Config {
 func (c *Config) Runtime(runtime string) *Config {
 	c.validators = append(c.validators, func(cfg *lambda.FunctionConfiguration) error {
 		if runtime != aws.StringValue(cfg.Runtime) {
-			return fmt.Errorf("Runtime() validator failed: %q != %q\n", runtime, aws.StringValue(cfg.Runtime))
+			return fmt.Errorf("validator Runtime() failed: %q != %q", runtime, aws.StringValue(cfg.Runtime))
 		}
 		return nil
 	})
@@ -113,7 +113,7 @@ func (c *Config) Runtime(runtime string) *Config {
 func (c *Config) Timeout(timeout int) *Config {
 	c.validators = append(c.validators, func(cfg *lambda.FunctionConfiguration) error {
 		if int64(timeout) != aws.Int64Value(cfg.Timeout) {
-			return fmt.Errorf("Runtime() validator failed: %d != %d\n", timeout, aws.Int64Value(cfg.Timeout))
+			return fmt.Errorf("validator Runtime() failed: %d != %d", timeout, aws.Int64Value(cfg.Timeout))
 		}
 		return nil
 	})

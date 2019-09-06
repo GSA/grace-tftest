@@ -10,9 +10,11 @@ To enable debugging, set the `TFTEST_DEBUG` environment variable to `true`
 1. Install system dependencies.
     1. [Go](https://golang.org/)
     1. [Dep](https://golang.github.io/dep/docs/installation.html)
-    1. [Go Meta Linter](https://github.com/alecthomas/gometalinter)
+    1. [GolangCI](https://github.com/golangci/golangci-lint)
     1. [gosec](https://github.com/securego/gosec)
 1. [Configure AWS](https://www.terraform.io/docs/providers/aws/#authentication) with AWS credentials locally.
+
+
 
 
 ## Public domain
