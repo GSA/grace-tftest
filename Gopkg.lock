@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:3f0c0440e568b19badda43995a725d6df796ed1f900b95e802c5e00d833e26a8"
+  digest = "1:6782260eeea6500e6415f0f1c5d5fb8f0979749b32b3f73eb3da026891ff6cc7"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -17,6 +17,7 @@
     "internal/ini",
     "internal/s3err",
     "internal/sdkio",
+    "internal/sdkmath",
     "internal/sdkrand",
     "internal/shareddefaults",
     "private/protocol",
@@ -37,8 +38,8 @@
     "service/s3",
   ]
   pruneopts = "UT"
-  revision = "ceab7b7ac6f535d1397f124620720b5145f1ad59"
-  version = "v1.15.88"
+  revision = "4651c2a344e90782ae06c956a5b0edcae3ae21d0"
+  version = "v1.23.16"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -49,11 +50,11 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:e22af8c7518e1eab6f2eab2b7d7558927f816262586cd6ed9f349c97a6c285c4"
+  digest = "1:bb81097a5b62634f3e9fec1014657855610c82d19b9a40c17612e32651e35dca"
   name = "github.com/jmespath/go-jmespath"
   packages = ["."]
   pruneopts = "UT"
-  revision = "0b12d6b5"
+  revision = "c2b33e84"
 
 [solve-meta]
   analyzer-name = "dep"
