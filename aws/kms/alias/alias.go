@@ -3,6 +3,7 @@ package alias
 import (
 	"testing"
 
+	"github.com/GSA/grace-tftest/aws/kms/policy"
 	"github.com/GSA/grace-tftest/aws/shared"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/client"
@@ -24,6 +25,18 @@ func New(client client.ConfigProvider) *Alias {
 // Selected returns the currently selected *kms.AliasListEntry
 func (a *Alias) Selected() *kms.AliasListEntry {
 	return a.alias
+}
+
+// Policy returns a newly instantiated *policy.Policy
+// using the TargetKeyId as the required keyID value
+// requires a prior call to Assert or First to "select"
+// the Alias whose TargetKeyId will be used
+func (a *Alias) Policy(t *testing.T) *policy.Policy {
+	if a.Selected() == nil {
+		t.Errorf("failed to call Policy() before calling First() or Assert()")
+		return nil
+	}
+	return policy.New(a.client, aws.StringValue(a.Selected().TargetKeyId))
 }
 
 // Assert applies all filters that have been called, resets the list of filters,

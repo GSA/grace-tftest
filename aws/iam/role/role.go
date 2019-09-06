@@ -3,6 +3,7 @@ package role
 import (
 	"testing"
 
+	"github.com/GSA/grace-tftest/aws/iam/role/attached"
 	"github.com/GSA/grace-tftest/aws/shared"
 	"github.com/GSA/grace-tftest/aws/shared/policy"
 	"github.com/GSA/grace-tftest/aws/shared/policy/statement"
@@ -33,6 +34,12 @@ func (r *Role) Selected() *iam.Role {
 func (r *Role) Statement(t *testing.T) *statement.Statement {
 	doc := r.Document(t)
 	return statement.New(doc)
+}
+
+// Attached returns a newly instantiated *attached.Attached object
+// used for finding *iam.AttachedPolicy objects
+func (r *Role) Attached() *attached.Attached {
+	return attached.New(r.client, aws.StringValue(r.role.RoleName))
 }
 
 // Assert applies all filters that have been called, resets the list of filters,
