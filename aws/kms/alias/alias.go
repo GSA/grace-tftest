@@ -27,13 +27,31 @@ func (a *Alias) Selected() *kms.AliasListEntry {
 	return a.alias
 }
 
+// Key returns the currently selected Aliases' targeted *kms.KeyMetadata
+func (a *Alias) Key(t *testing.T) *kms.KeyMetadata {
+	if a.alias == nil {
+		t.Errorf("failed to call Key() before calling, call First() or Assert()")
+		return nil
+	}
+	svc := kms.New(a.client)
+	out, err := svc.DescribeKey(&kms.DescribeKeyInput{
+		KeyId: a.alias.TargetKeyId,
+	})
+	if err != nil {
+		t.Errorf("failed to DescribeKey for targetKeyId: %q -> %v",
+			aws.StringValue(a.alias.TargetKeyId), err)
+		return nil
+	}
+	return out.KeyMetadata
+}
+
 // Policy returns a newly instantiated *policy.Policy
 // using the TargetKeyId as the required keyID value
 // requires a prior call to Assert or First to "select"
 // the Alias whose TargetKeyId will be used
 func (a *Alias) Policy(t *testing.T) *policy.Policy {
 	if a.Selected() == nil {
-		t.Errorf("failed to call Policy() before calling First() or Assert()")
+		t.Errorf("failed to call Policy() before calling, call First() or Assert()")
 		return nil
 	}
 	return policy.New(a.client, aws.StringValue(a.Selected().TargetKeyId))
