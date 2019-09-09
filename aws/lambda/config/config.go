@@ -29,7 +29,7 @@ func New(client client.ConfigProvider, functionName string) *Config {
 func (c *Config) Assert(t *testing.T, cfg *lambda.FunctionConfiguration) *Config {
 	err := c.validate(cfg)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	c.validators = []Validator{}
 	return c

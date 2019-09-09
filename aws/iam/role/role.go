@@ -49,14 +49,14 @@ func (r *Role) Assert(t *testing.T, roles ...*iam.Role) *Role {
 	var err error
 	roles, err = r.filter(roles)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	switch l := len(roles); {
 	case l == 0:
-		t.Error("no matching role was found")
+		t.Fatal("no matching role was found")
 	case l > 1:
-		t.Error("more than one matching role was found")
+		t.Fatal("more than one matching role was found")
 	default:
 		r.role = roles[0]
 	}
@@ -72,11 +72,11 @@ func (r *Role) First(t *testing.T, roles ...*iam.Role) *Role {
 	var err error
 	roles, err = r.filter(roles)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if len(roles) == 0 {
-		t.Error("no matching role was found")
+		t.Fatal("no matching role was found")
 	} else {
 		r.role = roles[0]
 	}

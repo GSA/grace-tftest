@@ -38,14 +38,14 @@ func (l *Lifecycle) Assert(t *testing.T, rules ...*s3.LifecycleRule) *Lifecycle 
 	var err error
 	rules, err = l.filter(rules)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	switch n := len(rules); {
 	case n == 0:
-		t.Error("no matching lifecycle rule was found")
+		t.Fatal("no matching lifecycle rule was found")
 	case n > 1:
-		t.Error("more than one matching lifecycle rule was found")
+		t.Fatal("more than one matching lifecycle rule was found")
 	default:
 		l.rule = rules[0]
 	}
@@ -61,11 +61,11 @@ func (l *Lifecycle) First(t *testing.T, rules ...*s3.LifecycleRule) *Lifecycle {
 	var err error
 	rules, err = l.filter(rules)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if len(rules) == 0 {
-		t.Error("no matching lifecycle rule was found")
+		t.Fatal("no matching lifecycle rule was found")
 	} else {
 		l.rule = rules[0]
 	}

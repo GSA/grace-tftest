@@ -34,14 +34,14 @@ func (g *Target) Assert(t *testing.T, targets ...*cloudwatchevents.Target) *Targ
 	var err error
 	targets, err = g.filter(targets)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	switch l := len(targets); {
 	case l == 0:
-		t.Error("no matching target was found")
+		t.Fatal("no matching target was found")
 	case l > 1:
-		t.Error("more than one matching target was found")
+		t.Fatal("more than one matching target was found")
 	default:
 		g.target = targets[0]
 	}
@@ -57,11 +57,11 @@ func (g *Target) First(t *testing.T, targets ...*cloudwatchevents.Target) *Targe
 	var err error
 	targets, err = g.filter(targets)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if len(targets) == 0 {
-		t.Error("no matching rule was found")
+		t.Fatal("no matching rule was found")
 	} else {
 		g.target = targets[0]
 	}
