@@ -41,6 +41,16 @@ func (c *Config) Validator(validator Validator) *Config {
 	return c
 }
 
+// Get returns the *lambda.FunctionConfiguration for the lambda
+func (c *Config) Get(t *testing.T) *lambda.FunctionConfiguration {
+	cfg, err := c.getConfig()
+	if err != nil {
+		t.Errorf("failed to get configuration for lambda: %s -> %v", c.functionName, err)
+		return nil
+	}
+	return cfg
+}
+
 // Env validates that the config contains an environment variable
 // matching the provided key and value
 func (c *Config) Env(key, value string) *Config {
