@@ -1,6 +1,7 @@
 package alias
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/GSA/grace-tftest/aws/kms/policy"
@@ -145,8 +146,8 @@ func (a *Alias) Name(name string) *Alias {
 		if alias == nil {
 			return false
 		}
-		shared.Debugf("%s == %s -> %t\n", name, aws.StringValue(alias.AliasName), name == aws.StringValue(alias.AliasName))
-		return name == aws.StringValue(alias.AliasName)
+		shared.Debugf("%s like %s -> %t\n", name, aws.StringValue(alias.AliasName), strings.EqualFold(name, aws.StringValue(alias.AliasName)))
+		return strings.EqualFold(name, aws.StringValue(alias.AliasName))
 	})
 	return a
 }

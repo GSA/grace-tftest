@@ -1,6 +1,7 @@
 package role
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/GSA/grace-tftest/aws/iam/role/attached"
@@ -139,8 +140,8 @@ func (r *Role) Name(name string) *Role {
 		if role == nil {
 			return false
 		}
-		shared.Debugf("%s == %s -> %t\n", name, aws.StringValue(role.RoleName), name == aws.StringValue(role.RoleName))
-		return name == aws.StringValue(role.RoleName)
+		shared.Debugf("%s like %s -> %t\n", name, aws.StringValue(role.RoleName), strings.EqualFold(name, aws.StringValue(role.RoleName)))
+		return strings.EqualFold(name, aws.StringValue(role.RoleName))
 	})
 	return r
 }

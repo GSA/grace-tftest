@@ -1,6 +1,7 @@
 package lifecycle
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -166,8 +167,8 @@ func (l *Lifecycle) Status(status string) *Lifecycle {
 		if rule == nil {
 			return false
 		}
-		shared.Debugf("%s == %s -> %t\n", status, aws.StringValue(rule.Status), status == aws.StringValue(rule.Status))
-		return status == aws.StringValue(rule.Status)
+		shared.Debugf("%s like %s -> %t\n", status, aws.StringValue(rule.Status), strings.EqualFold(status, aws.StringValue(rule.Status)))
+		return strings.EqualFold(status, aws.StringValue(rule.Status))
 	})
 	return l
 }
@@ -181,8 +182,8 @@ func (l *Lifecycle) Method(method string) *Lifecycle {
 		if rule == nil {
 			return false
 		}
-		shared.Debugf("%s == %s -> %t\n", method, aws.StringValue(rule.ID), method == aws.StringValue(rule.ID))
-		return method == aws.StringValue(rule.ID)
+		shared.Debugf("%s like %s -> %t\n", method, aws.StringValue(rule.ID), strings.EqualFold(method, aws.StringValue(rule.ID)))
+		return strings.EqualFold(method, aws.StringValue(rule.ID))
 	})
 	return l
 }

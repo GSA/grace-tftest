@@ -1,6 +1,7 @@
 package policy
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/GSA/grace-tftest/aws/shared"
@@ -126,8 +127,8 @@ func (p *Policy) Name(name string) *Policy {
 		if policy == nil {
 			return false
 		}
-		shared.Debugf("%s == %s -> %t\n", name, aws.StringValue(policy.PolicyName), name == aws.StringValue(policy.PolicyName))
-		return name == aws.StringValue(policy.PolicyName)
+		shared.Debugf("%s like %s -> %t\n", name, aws.StringValue(policy.PolicyName), strings.EqualFold(name, aws.StringValue(policy.PolicyName)))
+		return strings.EqualFold(name, aws.StringValue(policy.PolicyName))
 	})
 	return p
 }

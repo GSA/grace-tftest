@@ -1,6 +1,7 @@
 package rule
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/GSA/grace-tftest/aws/cloudwatchevents/rule/target"
@@ -105,8 +106,8 @@ func (r *Rule) ManagedBy(name string) *Rule {
 		if rule == nil {
 			return false
 		}
-		shared.Debugf("%s == %s -> %t\n", name, aws.StringValue(rule.ManagedBy), name == aws.StringValue(rule.ManagedBy))
-		return name == aws.StringValue(rule.ManagedBy)
+		shared.Debugf("%s like %s -> %t\n", name, aws.StringValue(rule.ManagedBy), strings.EqualFold(name, aws.StringValue(rule.ManagedBy)))
+		return strings.EqualFold(name, aws.StringValue(rule.ManagedBy))
 	})
 	return r
 }
@@ -120,8 +121,8 @@ func (r *Rule) Name(name string) *Rule {
 		if rule == nil {
 			return false
 		}
-		shared.Debugf("%s == %s -> %t\n", name, aws.StringValue(rule.Name), name == aws.StringValue(rule.Name))
-		return name == aws.StringValue(rule.Name)
+		shared.Debugf("%s like %s -> %t\n", name, aws.StringValue(rule.Name), strings.EqualFold(name, aws.StringValue(rule.Name)))
+		return strings.EqualFold(name, aws.StringValue(rule.Name))
 	})
 	return r
 }
@@ -150,9 +151,9 @@ func (r *Rule) SchedExpr(expr string) *Rule {
 		if rule == nil {
 			return false
 		}
-		shared.Debugf("%s == %s -> %t\n", expr, aws.StringValue(rule.ScheduleExpression),
-			expr == aws.StringValue(rule.ScheduleExpression))
-		return expr == aws.StringValue(rule.ScheduleExpression)
+		shared.Debugf("%s like %s -> %t\n", expr, aws.StringValue(rule.ScheduleExpression),
+			strings.EqualFold(expr, aws.StringValue(rule.ScheduleExpression)))
+		return strings.EqualFold(expr, aws.StringValue(rule.ScheduleExpression))
 	})
 	return r
 }
@@ -166,8 +167,8 @@ func (r *Rule) State(state string) *Rule {
 		if rule == nil {
 			return false
 		}
-		shared.Debugf("%s == %s -> %t\n", state, aws.StringValue(rule.State), state == aws.StringValue(rule.State))
-		return state == aws.StringValue(rule.State)
+		shared.Debugf("%s like %s -> %t\n", state, aws.StringValue(rule.State), strings.EqualFold(state, aws.StringValue(rule.State)))
+		return strings.EqualFold(state, aws.StringValue(rule.State))
 	})
 	return r
 }
