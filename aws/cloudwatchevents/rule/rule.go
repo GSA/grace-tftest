@@ -39,14 +39,14 @@ func (r *Rule) Assert(t *testing.T, rules ...*cloudwatchevents.Rule) *Rule {
 	var err error
 	rules, err = r.filter(rules)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	switch l := len(rules); {
 	case l == 0:
-		t.Error("no matching rule was found")
+		t.Fatal("no matching rule was found")
 	case l > 1:
-		t.Error("more than one matching rule was found")
+		t.Fatal("more than one matching rule was found")
 	default:
 		r.rule = rules[0]
 	}
@@ -62,11 +62,11 @@ func (r *Rule) First(t *testing.T, rules ...*cloudwatchevents.Rule) *Rule {
 	var err error
 	rules, err = r.filter(rules)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if len(rules) == 0 {
-		t.Error("no matching rule was found")
+		t.Fatal("no matching rule was found")
 	} else {
 		r.rule = rules[0]
 	}

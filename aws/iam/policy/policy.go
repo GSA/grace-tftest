@@ -45,14 +45,14 @@ func (p *Policy) Assert(t *testing.T, policies ...*iam.Policy) *Policy {
 	var err error
 	policies, err = p.filter(policies)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	switch l := len(policies); {
 	case l == 0:
-		t.Error("no matching policy was found")
+		t.Fatal("no matching policy was found")
 	case l > 1:
-		t.Error("more than one matching policy was found")
+		t.Fatal("more than one matching policy was found")
 	default:
 		p.policy = policies[0]
 	}
@@ -68,11 +68,11 @@ func (p *Policy) First(t *testing.T, policies ...*iam.Policy) *Policy {
 	var err error
 	policies, err = p.filter(policies)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if len(policies) == 0 {
-		t.Error("no matching policy was found")
+		t.Fatal("no matching policy was found")
 	} else {
 		p.policy = policies[0]
 	}

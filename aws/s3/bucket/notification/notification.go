@@ -37,14 +37,14 @@ func (n *Notification) Assert(t *testing.T, configs ...*Configuration) *Notifica
 	var err error
 	configs, err = n.filter(configs)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	switch l := len(configs); {
 	case l == 0:
-		t.Error("no matching configuration was found")
+		t.Fatal("no matching configuration was found")
 	case l > 1:
-		t.Error("more than one matching configuration was found")
+		t.Fatal("more than one matching configuration was found")
 	default:
 		n.config = configs[0]
 	}
@@ -60,11 +60,11 @@ func (n *Notification) First(t *testing.T, configs ...*Configuration) *Notificat
 	var err error
 	configs, err = n.filter(configs)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if len(configs) == 0 {
-		t.Error("no matching configuration was found")
+		t.Fatal("no matching configuration was found")
 	} else {
 		n.config = configs[0]
 	}

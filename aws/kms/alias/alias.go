@@ -64,14 +64,14 @@ func (a *Alias) Assert(t *testing.T, aliases ...*kms.AliasListEntry) *Alias {
 	var err error
 	aliases, err = a.filter(aliases)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	switch l := len(aliases); {
 	case l == 0:
-		t.Error("no matching alias was found")
+		t.Fatal("no matching alias was found")
 	case l > 1:
-		t.Error("more than one matching alias was found")
+		t.Fatal("more than one matching alias was found")
 	default:
 		a.alias = aliases[0]
 	}
@@ -87,11 +87,11 @@ func (a *Alias) First(t *testing.T, aliases ...*kms.AliasListEntry) *Alias {
 	var err error
 	aliases, err = a.filter(aliases)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if len(aliases) == 0 {
-		t.Error("no matching alias was found")
+		t.Fatal("no matching alias was found")
 	} else {
 		a.alias = aliases[0]
 	}

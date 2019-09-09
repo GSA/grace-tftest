@@ -46,14 +46,14 @@ func (a *Attached) Assert(t *testing.T, policies ...*iam.AttachedPolicy) *Attach
 	var err error
 	policies, err = a.filter(policies)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	switch l := len(policies); {
 	case l == 0:
-		t.Error("no matching attached policy was found")
+		t.Fatal("no matching attached policy was found")
 	case l > 1:
-		t.Error("more than one matching attached policy was found")
+		t.Fatal("more than one matching attached policy was found")
 	default:
 		a.attached = policies[0]
 	}
@@ -69,11 +69,11 @@ func (a *Attached) First(t *testing.T, policies ...*iam.AttachedPolicy) *Attache
 	var err error
 	policies, err = a.filter(policies)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if len(policies) == 0 {
-		t.Error("no matching attached policy was found")
+		t.Fatal("no matching attached policy was found")
 	} else {
 		a.attached = policies[0]
 	}

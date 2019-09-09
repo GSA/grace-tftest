@@ -51,7 +51,7 @@ func (b *Bucket) Lifecycle() *lifecycle.Lifecycle {
 func (b *Bucket) Assert(t *testing.T) *Bucket {
 	err := b.checker()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 		return b
 	}
 	return b

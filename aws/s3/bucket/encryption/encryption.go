@@ -37,14 +37,14 @@ func (e *Encryption) Assert(t *testing.T, rules ...*s3.ServerSideEncryptionRule)
 	var err error
 	rules, err = e.filter(rules)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	switch l := len(rules); {
 	case l == 0:
-		t.Error("no matching lifecycle rule was found")
+		t.Fatal("no matching lifecycle rule was found")
 	case l > 1:
-		t.Error("more than one matching lifecycle rule was found")
+		t.Fatal("more than one matching lifecycle rule was found")
 	default:
 		e.rule = rules[0]
 	}
@@ -60,11 +60,11 @@ func (e *Encryption) First(t *testing.T, rules ...*s3.ServerSideEncryptionRule) 
 	var err error
 	rules, err = e.filter(rules)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if len(rules) == 0 {
-		t.Error("no matching lifecycle rule was found")
+		t.Fatal("no matching lifecycle rule was found")
 	} else {
 		e.rule = rules[0]
 	}
