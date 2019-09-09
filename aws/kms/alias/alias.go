@@ -37,6 +37,10 @@ func (a *Alias) Key(t *testing.T) *kms.KeyMetadata {
 	out, err := svc.DescribeKey(&kms.DescribeKeyInput{
 		KeyId: a.alias.TargetKeyId,
 	})
+	if err != nil {
+		t.Errorf("failed to DescribeKey. %v", err)
+		return nil
+	}
 	return out.KeyMetadata
 }
 
