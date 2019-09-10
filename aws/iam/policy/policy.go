@@ -1,6 +1,8 @@
 package policy
 
 import (
+	"log"
+	"os"
 	"strings"
 	"testing"
 
@@ -169,7 +171,13 @@ func (p *Policy) filter(policies []*iam.Policy) ([]*iam.Policy, error) {
 			return nil, err
 		}
 	}
-	return fromIface(shared.GenericFilter(p.filters, toIface(policies))), nil
+
+	results := fromIface(shared.GenericFilter(p.filters, toIface(policies)))
+	if len(results) == 0 {
+		log.Println("aws.iam.policy.filter had zero results: ")
+		shared.Spew(os.Stdout, policies)
+	}
+	return results, nil
 }
 
 func (p *Policy) policies() ([]*iam.Policy, error) {

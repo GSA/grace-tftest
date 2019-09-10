@@ -1,6 +1,8 @@
 package role
 
 import (
+	"log"
+	"os"
 	"strings"
 	"testing"
 
@@ -154,7 +156,12 @@ func (r *Role) filter(roles []*iam.Role) ([]*iam.Role, error) {
 			return nil, err
 		}
 	}
-	return fromIface(shared.GenericFilter(r.filters, toIface(roles))), nil
+	results := fromIface(shared.GenericFilter(r.filters, toIface(roles)))
+	if len(results) == 0 {
+		log.Println("aws.iam.role.filter had zero results: ")
+		shared.Spew(os.Stdout, roles)
+	}
+	return results, nil
 }
 
 func (r *Role) roles() ([]*iam.Role, error) {

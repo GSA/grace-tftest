@@ -1,6 +1,8 @@
 package target
 
 import (
+	"log"
+	"os"
 	"testing"
 
 	"github.com/GSA/grace-tftest/aws/shared"
@@ -129,7 +131,12 @@ func (g *Target) filter(targets []*cloudwatchevents.Target) ([]*cloudwatchevents
 			return nil, err
 		}
 	}
-	return fromIface(shared.GenericFilter(g.filters, toIface(targets))), nil
+	results := fromIface(shared.GenericFilter(g.filters, toIface(targets)))
+	if len(results) == 0 {
+		log.Println("aws.cloudwatchevents.rule.target.filter had zero results: ")
+		shared.Spew(os.Stdout, targets)
+	}
+	return results, nil
 }
 
 func (g *Target) targets() ([]*cloudwatchevents.Target, error) {

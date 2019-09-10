@@ -1,6 +1,8 @@
 package encryption
 
 import (
+	"log"
+	"os"
 	"testing"
 
 	"github.com/GSA/grace-tftest/aws/shared"
@@ -136,7 +138,12 @@ func (e *Encryption) filter(rules []*s3.ServerSideEncryptionRule) ([]*s3.ServerS
 			return nil, err
 		}
 	}
-	return fromIface(shared.GenericFilter(e.filters, toIface(rules))), nil
+	results := fromIface(shared.GenericFilter(e.filters, toIface(rules)))
+	if len(results) == 0 {
+		log.Println("aws.s3.bucket.encryption.filter had zero results: ")
+		shared.Spew(os.Stdout, rules)
+	}
+	return results, nil
 }
 
 func (e *Encryption) rules() ([]*s3.ServerSideEncryptionRule, error) {

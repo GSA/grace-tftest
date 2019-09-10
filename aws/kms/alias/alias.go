@@ -1,6 +1,8 @@
 package alias
 
 import (
+	"log"
+	"os"
 	"strings"
 	"testing"
 
@@ -160,7 +162,12 @@ func (a *Alias) filter(aliases []*kms.AliasListEntry) ([]*kms.AliasListEntry, er
 			return nil, err
 		}
 	}
-	return fromIface(shared.GenericFilter(a.filters, toIface(aliases))), nil
+	results := fromIface(shared.GenericFilter(a.filters, toIface(aliases)))
+	if len(results) == 0 {
+		log.Println("aws.kms.alias.filter had zero results: ")
+		shared.Spew(os.Stdout, aliases)
+	}
+	return results, nil
 }
 
 func (a *Alias) aliases() ([]*kms.AliasListEntry, error) {
