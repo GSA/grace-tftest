@@ -1,6 +1,8 @@
 package lifecycle
 
 import (
+	"log"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -226,7 +228,12 @@ func (l *Lifecycle) filter(rules []*s3.LifecycleRule) ([]*s3.LifecycleRule, erro
 			return nil, err
 		}
 	}
-	return fromIface(shared.GenericFilter(l.filters, toIface(rules))), nil
+	results := fromIface(shared.GenericFilter(l.filters, toIface(rules)))
+	if len(results) == 0 {
+		log.Println("aws.s3.bucket.lifecycle.filter had zero results: ")
+		shared.Spew(os.Stdout, rules)
+	}
+	return results, nil
 }
 
 func (l *Lifecycle) rules() ([]*s3.LifecycleRule, error) {

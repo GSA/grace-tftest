@@ -1,6 +1,8 @@
 package statement
 
 import (
+	"log"
+	"os"
 	"strings"
 	"testing"
 
@@ -174,7 +176,12 @@ func (s *Statement) Condition(operator string, property string, value ...string)
 }
 
 func (s *Statement) filter() []*policy.Statement {
-	return fromIface(shared.GenericFilter(s.filters, toIface(s.doc.Statement)))
+	results := fromIface(shared.GenericFilter(s.filters, toIface(s.doc.Statement)))
+	if len(results) == 0 {
+		log.Println("aws.shared.policy.statement.filter had zero results: ")
+		shared.Spew(os.Stdout, s.doc.Statement)
+	}
+	return results
 }
 
 func convert(in interface{}) *policy.Statement {

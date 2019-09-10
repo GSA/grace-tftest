@@ -1,6 +1,8 @@
 package attached
 
 import (
+	"log"
+	"os"
 	"strings"
 	"testing"
 
@@ -162,7 +164,12 @@ func (a *Attached) filter(policies []*iam.AttachedPolicy) ([]*iam.AttachedPolicy
 			return nil, err
 		}
 	}
-	return fromIface(shared.GenericFilter(a.filters, toIface(policies))), nil
+	results := fromIface(shared.GenericFilter(a.filters, toIface(policies)))
+	if len(results) == 0 {
+		log.Println("aws.iam.role.attached.filter had zero results: ")
+		shared.Spew(os.Stdout, policies)
+	}
+	return results, nil
 }
 
 func (a *Attached) policies() ([]*iam.AttachedPolicy, error) {

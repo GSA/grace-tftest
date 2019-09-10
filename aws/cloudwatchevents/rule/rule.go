@@ -1,6 +1,8 @@
 package rule
 
 import (
+	"log"
+	"os"
 	"strings"
 	"testing"
 
@@ -181,7 +183,12 @@ func (r *Rule) filter(rules []*cloudwatchevents.Rule) ([]*cloudwatchevents.Rule,
 			return nil, err
 		}
 	}
-	return fromIface(shared.GenericFilter(r.filters, toIface(rules))), nil
+	results := fromIface(shared.GenericFilter(r.filters, toIface(rules)))
+	if len(results) == 0 {
+		log.Println("aws.cloudwatchevents.rule.filter had zero results: ")
+		shared.Spew(os.Stdout, rules)
+	}
+	return results, nil
 }
 
 func (r *Rule) rules() ([]*cloudwatchevents.Rule, error) {

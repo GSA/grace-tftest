@@ -60,6 +60,12 @@ func Dump(v ...interface{}) {
 	dump(v...)
 }
 
+// Spew writes the pretty-printed values of v to the
+// provided io.Writer
+func Spew(w io.Writer, v ...interface{}) {
+	spew.Fdump(w, v...)
+}
+
 func debug(data string) {
 	muWriter.RLock()
 	_, err := spew.Fprintf(debugWriter, "%s %s\n%s", time.Now().Format(time.RFC3339), location(), data)
@@ -81,5 +87,6 @@ func location() string {
 	n := runtime.Callers(4, pc)
 	frames := runtime.CallersFrames(pc[:n])
 	frame, _ := frames.Next()
+
 	return fmt.Sprintf("%s:%d %s", frame.File, frame.Line, frame.Function)
 }

@@ -1,6 +1,8 @@
 package notification
 
 import (
+	"log"
+	"os"
 	"testing"
 
 	"github.com/GSA/grace-tftest/aws/shared"
@@ -172,7 +174,12 @@ func (n *Notification) filter(configs []*Configuration) ([]*Configuration, error
 			return nil, err
 		}
 	}
-	return fromIface(shared.GenericFilter(n.filters, toIface(configs))), nil
+	results := fromIface(shared.GenericFilter(n.filters, toIface(configs)))
+	if len(results) == 0 {
+		log.Println("aws.s3.bucket.notification.filter had zero results: ")
+		shared.Spew(os.Stdout, configs)
+	}
+	return results, nil
 }
 
 // Configuration ... is a generic structure used for normalizing
