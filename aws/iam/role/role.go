@@ -1,6 +1,7 @@
 package role
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -43,6 +44,24 @@ func (r *Role) Statement(t *testing.T) *statement.Statement {
 // used for finding *iam.AttachedPolicy objects
 func (r *Role) Attached() *attached.Attached {
 	return attached.New(r.client, aws.StringValue(r.role.RoleName))
+}
+
+// Inlined returns a newly instantiated *statement.Statement object
+// used for filtering inlined Role Policies
+func (r *Role) Inlined(t *testing.T, doc *policy.Document) *statement.Statement {
+	if r.role == nil {
+		t.Errorf("failed to call Inlined() before calling, call First() or Assert()")
+		return nil
+	}
+	if doc == nil {
+		statements, err := r.inlined()
+		if err != nil {
+			t.Errorf("failed to query inlined policies: %v", err)
+			return nil
+		}
+		doc = &policy.Document{Statement: statements}
+	}
+	return statement.New(doc)
 }
 
 // Assert applies all filters that have been called, resets the list of filters,
@@ -175,6 +194,36 @@ func (r *Role) roles() ([]*iam.Role, error) {
 		return nil, err
 	}
 	return roles, nil
+}
+
+func (r *Role) inlined() ([]*policy.Statement, error) {
+	svc := iam.New(r.client)
+	var names []*string
+	err := svc.ListRolePoliciesPages(&iam.ListRolePoliciesInput{
+		RoleName: r.role.RoleName,
+	}, func(page *iam.ListRolePoliciesOutput, lastPage bool) bool {
+		names = append(names, page.PolicyNames...)
+		return !lastPage
+	})
+	if err != nil {
+		return nil, err
+	}
+	var statements []*policy.Statement
+	for _, n := range names {
+		out, err := svc.GetRolePolicy(&iam.GetRolePolicyInput{
+			RoleName:   r.role.RoleName,
+			PolicyName: n,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to get inline policy for role: %s -> %v", aws.StringValue(r.role.RoleName), err)
+		}
+		doc, err := policy.Unmarshal(aws.StringValue(out.PolicyDocument))
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal inline policy document for role: %s -> %v", aws.StringValue(r.role.RoleName), err)
+		}
+		statements = append(statements, doc.Statement...)
+	}
+	return statements, nil
 }
 
 func convert(in interface{}) *iam.Role {
