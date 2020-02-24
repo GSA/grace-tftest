@@ -3,7 +3,7 @@ GODEP := $(GOBIN)/dep
 GOLANGCILINT := $(GOBIN)/golangci-lint
 GOSEC := $(GOBIN)/gosec
 
-.PHONY: test lint dependencies
+.PHONY: test lint dependencies precommit
 default: test
 
 test: lint
@@ -19,7 +19,7 @@ ifeq (,$(wildcard Gopkg.toml))
 	$(GODEP) init
 endif
 
-dependencies: $(GOLANGCILINT) $(GOSEC) Gopkg.toml
+dependencies: $(GOLANGCILINT) $(GOSEC) Gopkg.toml precommit
 
 $(GOLANGCILINT):
 	go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
@@ -29,3 +29,8 @@ $(GODEP):
 
 $(GOSEC):
 	go get -u github.com/securego/gosec/cmd/gosec
+
+precommit:
+ifneq ($(strip $(hooksPath)),.github/hooks)
+	@git config --add core.hooksPath .github/hooks
+endif
