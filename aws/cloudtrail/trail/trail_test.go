@@ -19,7 +19,7 @@ func TestTrail(t *testing.T) {
 	New(nil).Arn("a").Region("c").Name("b").Assert(t, trails...)
 
 	trail := New(nil).Arn("a").Name("b").First(t, trails...).Selected()
-	if aws.StringValue(trail.Name) != "c" {
-		t.Fatalf("first element invalid, expected c, got: %#s\n", trail.Name)
+	if len(aws.StringValue(trail.Name)) != 1 {
+		t.Fatalf("first element invalid, expected length 1, got: %d\n", len(aws.StringValue(trail.Name)))
 	}
 }
