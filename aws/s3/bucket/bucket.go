@@ -45,6 +45,12 @@ func (b *Bucket) Lifecycle() *lifecycle.Lifecycle {
 	return lifecycle.New(b.client, b.name)
 }
 
+// Policy returns a new *policy.Policy
+// instantiated with the current bucket name set by calling Name()
+func (b *Bucket) policy() *policy.Policy {
+	return policy.New(b.client, b.name)
+}
+
 // Assert executes the checker method (normally s3.Head)
 // to verify the bucket with the name give to Name exists
 // fails if bucket doesn't exist
