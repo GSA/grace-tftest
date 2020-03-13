@@ -208,7 +208,7 @@ func (r *Role) inlined() ([]*policy.Statement, error) {
 	if err != nil {
 		return nil, err
 	}
-	var statements []*policy.Statement
+	statements := make([]*policy.Statement, 0, len(names))
 	for _, n := range names {
 		out, err := svc.GetRolePolicy(&iam.GetRolePolicyInput{
 			RoleName:   r.role.RoleName,
