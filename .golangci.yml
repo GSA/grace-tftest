@@ -112,7 +112,6 @@ linters:
     - dupl
     - errcheck
     - funlen
-    - gochecknoinits
     - gocognit
     - goconst
     - gocritic
