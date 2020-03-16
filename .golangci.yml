@@ -103,12 +103,45 @@ linters-settings:
     for-loops: false # Report preallocation suggestions on for loops, false by default
 
 linters:
-  enable-all: true
-  disable:
-    - gochecknoinits
-    - gochecknoglobals
-    - wsl
-    - gomnd
+  disable-all: true
+  enable:
+    - bodyclose
+    - deadcode
+    - depguard
+    - dogsled
+    - dupl
+    - errcheck
+    - funlen
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godox
+    - gofmt
+    - goimports
+    - golint
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - interfacer
+    - lll
+    - maligned
+    - misspell
+    - nakedret
+    - prealloc
+    - rowserrcheck
+    - scopelint
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+    - whitespace
   fast: false
 
   # Independently from option `exclude` we use default exclude patterns,

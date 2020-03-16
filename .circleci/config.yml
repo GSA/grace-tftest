@@ -1,13 +1,35 @@
 version: 2
 jobs:
   test:
+    environment:
+      AWS_REGION: us-east-1
     docker:
       - image: circleci/golang:latest
-    working_directory: /go/src/github.com/GSA/grace-tftest
     steps:
       - checkout
       - run:
-          name: Run tests
+          name: Install make, curl, unzip
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y make curl unzip
+      - run:
+          name: Install Terraform
+          command: |
+            TERRAFORM_LATEST_URL=$(curl --silent --location --head --output /dev/null --write-out '%{url_effective}' -- https://github.com/hashicorp/terraform/releases/latest)
+            TERRAFORM_VERSION=${TERRAFORM_LATEST_URL##*/}
+            TERRAFORM_VERSION=${TERRAFORM_VERSION:1:${#TERRAFORM_VERSION}}
+            curl -o terraform.zip -sSL "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
+            sudo unzip terraform.zip -d /bin
+            sudo chmod +x /bin/terraform
+      - run:
+          name: Install Moto Server
+          command: |
+            sudo apt-get install -y python3-dev gcc python3-pip
+            sudo pip3 install --upgrade pip setuptools flask
+            git clone https://github.com/brady-gsa/moto.git
+            pip install -e moto
+      - run:
+          name: Execute Tests
           command: |
             make test
 
