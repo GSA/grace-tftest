@@ -50,7 +50,7 @@ func (p *Policy) statements() ([]*policy.Statement, error) {
 		return nil, err
 	}
 
-	var statements []*policy.Statement
+	statements := make([]*policy.Statement, 0, len(names))
 	for _, name := range names {
 		if len(name) == 0 {
 			continue
