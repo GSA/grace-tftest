@@ -78,12 +78,11 @@ type job struct {
 	Err          error
 	Stderr       io.Writer
 	Stdout       io.Writer
-	TestBinary   string
 }
 
 const urlFmt = "http://localhost:%d"
 
-//nolint: gosec, gocyclo
+//nolint: gosec
 func (j *job) run(services []string) error {
 	port, err := getPort()
 	if err != nil {
@@ -130,18 +129,6 @@ func (j *job) run(services []string) error {
 		return fmt.Errorf("[%s]: %v", j.Name, err)
 	}
 
-	jj := &job{Name: "random", Env: []string{"TESTVAR=test"}, Stderr: os.Stderr, Stdout: os.Stdout}
-	testPath := filepath.Join(j.RootPath, "random_test.go")
-
-	testCmd, err := jj.startProcess("go", "test", "-v", testPath)
-	if err != nil {
-		return fmt.Errorf("failed to start random test: %v", err)
-	}
-	err = testCmd.Wait()
-	if err != nil {
-		return fmt.Errorf("failed to wait on random test: %v", err)
-	}
-
 	return j.runTest()
 }
 
@@ -167,32 +154,9 @@ func (j *job) runTerraform() error {
 }
 
 func (j *job) runTest() error {
-	fileName := j.Name
-	if runtime.GOOS == "windows" {
-		fileName = j.Name + ".exe"
-	}
-
-	j.TestBinary = filepath.Join(j.Path, fileName)
-	cmd, err := j.startProcess("go", "test", "-v", "-c", "-o", j.TestBinary, j.TestFile)
+	cmd, err := j.startProcess("go", "test", "-v", j.TestFile)
 	if err != nil {
 		return fmt.Errorf("[%s]: failed to compile test: %v", j.Name, err)
-	}
-	err = cmd.Wait()
-	if err != nil {
-		return fmt.Errorf("[%s]: failed to wait for compilation of test: %v", j.Name, err)
-	}
-
-	err = retrier(100*time.Millisecond, 10, func() error {
-		_, err := os.Stat(j.TestBinary)
-		return err
-	})
-	if err != nil {
-		return fmt.Errorf("[%s]: failed to wait for test binary to be written to disk: %s", j.Name, j.TestBinary)
-	}
-
-	cmd, err = j.startProcess(j.TestBinary, "-test.v")
-	if err != nil {
-		return fmt.Errorf("[%s]: %v", j.Name, err)
 	}
 	return cmd.Wait()
 }
@@ -214,13 +178,6 @@ func (j *job) cleanup() {
 	})
 	if err != nil {
 		fmt.Printf("failed to cleanup: %s\n", tfstate)
-	}
-
-	err = retrier(100*time.Millisecond, 5, func() error {
-		return os.Remove(j.TestBinary)
-	})
-	if err != nil {
-		fmt.Printf("failed to cleanup: %s\n", tfdir)
 	}
 
 	err = retrier(100*time.Millisecond, 5, func() error {
@@ -396,7 +353,7 @@ func getPort() (int, error) {
 func kill(cmd *exec.Cmd) error {
 	pid := strconv.Itoa(cmd.Process.Pid)
 	killers := map[string]*exec.Cmd{
-		"darwin":  exec.Command("kill", pid),
+		"darwin":  exec.Command("kill", "-9", pid),
 		"linux":   exec.Command("kill", "-9", pid),
 		"windows": exec.Command("TASKKILL", "/T", "/F", "/PID", pid),
 	}

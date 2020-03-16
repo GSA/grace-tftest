@@ -11,6 +11,11 @@ import (
 )
 
 func TestBucket(t *testing.T) {
+	port := os.Getenv("MOTO_PORT")
+	if len(port) == 0 {
+		t.Skipf("skipping testing, MOTO_PORT not set in environment variables")
+	}
+
 	url := "http://localhost:" + os.Getenv("MOTO_PORT")
 	fmt.Printf("connecting to: %s\n", url)
 	sess, err := session.NewSession(&aws.Config{
