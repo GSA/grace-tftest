@@ -449,7 +449,7 @@ func (r *Rule) rules() ([]*configservice.ConfigRule, error) {
 		}
 		rules = append(rules, out.ConfigRules...)
 	}
-	return out.ConfigRules, nil
+	return rules, nil
 }
 
 func convert(in interface{}) *configservice.ConfigRule {
