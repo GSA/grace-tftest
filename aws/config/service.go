@@ -2,18 +2,24 @@
 package config
 
 import (
+	"github.com/GSA/grace-tftest/aws/config/deliverychannel"
 	"github.com/GSA/grace-tftest/aws/config/recorder"
+	"github.com/GSA/grace-tftest/aws/config/rule"
 	"github.com/aws/aws-sdk-go/aws/client"
 )
 
 // Service contains all the supported types for AWS Config
 type Service struct {
-	Recorder *recorder.Recorder
+	DeliveryChannel *deliverychannel.DeliveryChannel
+	Recorder        *recorder.Recorder
+	Rule            *rule.Rule
 }
 
 // New returns a new *Service
 func New(client client.ConfigProvider) *Service {
 	return &Service{
-		Recorder: recorder.New(client),
+		DeliveryChannel: deliverychannel.New(client),
+		Recorder:        recorder.New(client),
+		Rule:            rule.New(client),
 	}
 }
