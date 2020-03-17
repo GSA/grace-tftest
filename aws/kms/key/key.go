@@ -1,3 +1,4 @@
+// Package key provides filtering of KMS keys by Description
 package key
 
 import (
@@ -148,7 +149,12 @@ func (a *Key) Description(description string) *Key {
 		if key == nil {
 			return false
 		}
-		shared.Debugf("%s like %s -> %t\n", description, aws.StringValue(key.Description), strings.EqualFold(description, aws.StringValue(key.Description)))
+		shared.Debugf(
+			"%s like %s -> %t\n",
+			description,
+			aws.StringValue(key.Description),
+			strings.EqualFold(description, aws.StringValue(key.Description)),
+		)
 		return strings.EqualFold(description, aws.StringValue(key.Description))
 	})
 	return a
