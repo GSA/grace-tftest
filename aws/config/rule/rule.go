@@ -402,7 +402,8 @@ func (r *Rule) SourceDetailMessageType(typ string) *Rule {
 	return r
 }
 
-func detailEquals(rule *configservice.ConfigRule, expected string, actual func(*configservice.SourceDetail) string) bool {
+func detailEquals(rule *configservice.ConfigRule, expected string,
+	actual func(*configservice.SourceDetail) string) bool {
 	if rule.Source == nil ||
 		rule.Source.SourceDetails == nil {
 		return false
