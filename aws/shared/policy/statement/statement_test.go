@@ -44,8 +44,32 @@ func TestStatement(t *testing.T) {
 		t.Fatalf("failed to unmarshal test policy: %v", err)
 	}
 
-	New(doc).Sid("a").Action("b").Effect("c").Resource("d", "e", "f").Assert(t)
-	New(doc).Action("a", "b", "c").Effect("d").Resource("e").Assert(t)
-	New(doc).Action("a").Effect("b").Resource("c").Condition("d", "e", "f").Assert(t)
-	New(doc).Action("a").Effect("b").Resource("c").Principal("d", "e").Condition("f", "g", "h").Condition("i", "j", "k", "l", "m").Assert(t)
+	New(doc).
+		Sid("a").
+		Action("b").
+		Effect("c").
+		Resource("d", "e", "f").
+		Assert(t)
+
+	New(doc).
+		Action("a", "b", "c").
+		Effect("d").
+		Resource("e").
+		Assert(t)
+
+	New(doc).
+		Action("a").
+		Effect("b").
+		Resource("c").
+		Condition("d", "e", "f").
+		Assert(t)
+
+	New(doc).
+		Action("a").
+		Effect("b").
+		Resource("c").
+		Principal("d", "e").
+		Condition("f", "g", "h").
+		Condition("i", "j", "k", "l", "m").
+		Assert(t)
 }
