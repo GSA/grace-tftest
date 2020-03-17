@@ -1,4 +1,4 @@
-// config provides access to filters related to AWS Config
+// Package config provides access to filters related to AWS Config
 package config
 
 import (

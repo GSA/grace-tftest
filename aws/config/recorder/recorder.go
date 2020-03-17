@@ -1,4 +1,4 @@
-// recorder provides the ability to filter *configservice.ConfigurationRecorder objects
+// Package recorder provides the ability to filter *configservice.ConfigurationRecorder objects
 package recorder
 
 import (
@@ -200,7 +200,8 @@ func (r *Recorder) Name(name string) *Recorder {
 	return r
 }
 
-func (r *Recorder) filter(recorders []*configservice.ConfigurationRecorder) ([]*configservice.ConfigurationRecorder, error) {
+func (r *Recorder) filter(recorders []*configservice.ConfigurationRecorder) (
+	[]*configservice.ConfigurationRecorder, error) {
 	if len(recorders) == 0 {
 		var err error
 		recorders, err = r.recorders()

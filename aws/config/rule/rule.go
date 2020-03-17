@@ -1,3 +1,4 @@
+// Package rule provides the ability to filter *configservice.ConfigRule objects
 package rule
 
 import (
@@ -344,24 +345,17 @@ func (r *Rule) SourceID(id string) *Rule {
 func (r *Rule) SourceDetailEventSource(source string) *Rule {
 	r.filters = append(r.filters, func(v interface{}) bool {
 		rule := convert(v)
-		if rule == nil ||
-			rule.Source == nil ||
-			rule.Source.SourceDetails == nil {
+		if rule == nil {
 			return false
 		}
 
-		for _, d := range rule.Source.SourceDetails {
-			shared.Debugf("%s == %s -> %t\n",
-				source,
-				aws.StringValue(d.EventSource),
-				source == aws.StringValue(d.EventSource),
-			)
-			if source == aws.StringValue(d.EventSource) {
-				return true
-			}
-		}
-
-		return false
+		return detailEquals(
+			rule,
+			source,
+			func(d *configservice.SourceDetail) string {
+				return aws.StringValue(d.EventSource)
+			},
+		)
 	})
 	return r
 }
@@ -372,24 +366,17 @@ func (r *Rule) SourceDetailEventSource(source string) *Rule {
 func (r *Rule) SourceDetailFrequency(freq string) *Rule {
 	r.filters = append(r.filters, func(v interface{}) bool {
 		rule := convert(v)
-		if rule == nil ||
-			rule.Source == nil ||
-			rule.Source.SourceDetails == nil {
+		if rule == nil {
 			return false
 		}
 
-		for _, d := range rule.Source.SourceDetails {
-			shared.Debugf("%s == %s -> %t\n",
-				freq,
-				aws.StringValue(d.MaximumExecutionFrequency),
-				freq == aws.StringValue(d.MaximumExecutionFrequency),
-			)
-			if freq == aws.StringValue(d.MaximumExecutionFrequency) {
-				return true
-			}
-		}
-
-		return false
+		return detailEquals(
+			rule,
+			freq,
+			func(d *configservice.SourceDetail) string {
+				return aws.StringValue(d.MaximumExecutionFrequency)
+			},
+		)
 	})
 	return r
 }
@@ -400,26 +387,37 @@ func (r *Rule) SourceDetailFrequency(freq string) *Rule {
 func (r *Rule) SourceDetailMessageType(typ string) *Rule {
 	r.filters = append(r.filters, func(v interface{}) bool {
 		rule := convert(v)
-		if rule == nil ||
-			rule.Source == nil ||
-			rule.Source.SourceDetails == nil {
+		if rule == nil {
 			return false
 		}
 
-		for _, d := range rule.Source.SourceDetails {
-			shared.Debugf("%s == %s -> %t\n",
-				typ,
-				aws.StringValue(d.MessageType),
-				typ == aws.StringValue(d.MessageType),
-			)
-			if typ == aws.StringValue(d.MessageType) {
-				return true
-			}
-		}
-
-		return false
+		return detailEquals(
+			rule,
+			typ,
+			func(d *configservice.SourceDetail) string {
+				return aws.StringValue(d.MessageType)
+			},
+		)
 	})
 	return r
+}
+
+func detailEquals(rule *configservice.ConfigRule, expected string, actual func(*configservice.SourceDetail) string) bool {
+	if rule.Source == nil ||
+		rule.Source.SourceDetails == nil {
+		return false
+	}
+	for _, d := range rule.Source.SourceDetails {
+		if expected == actual(d) {
+			shared.Debugf("%s == %s -> %t\n",
+				expected,
+				actual(d),
+				expected == actual(d),
+			)
+			return true
+		}
+	}
+	return false
 }
 
 func (r *Rule) filter(rules []*configservice.ConfigRule) ([]*configservice.ConfigRule, error) {

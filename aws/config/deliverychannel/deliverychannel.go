@@ -1,3 +1,4 @@
+// Package deliverychannel provides the ability to filter *configservice.DeliveryChannel objects
 package deliverychannel
 
 import (
