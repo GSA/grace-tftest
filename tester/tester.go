@@ -82,7 +82,6 @@ type job struct {
 
 const urlFmt = "http://localhost:%d"
 
-//nolint: gosec
 func (j *job) run(services []string) error {
 	port, err := getPort()
 	if err != nil {
@@ -95,7 +94,7 @@ func (j *job) run(services []string) error {
 		return fmt.Errorf("[%s]: %v", j.Name, err)
 	}
 	defer func() {
-		err := kill(moto)
+		err = kill(moto)
 		if err != nil {
 			fmt.Printf("failed to terminate process: %v", err)
 		}
@@ -110,10 +109,12 @@ func (j *job) run(services []string) error {
 	maxRetries := 20
 	for i := 0; i < maxRetries; i++ {
 		time.Sleep(1 * time.Second)
-		//nolint: gosec
 		//we own all variables related to this url variable
 		url := fmt.Sprintf(urlFmt, port)
-		resp, err := http.Get(url)
+
+		var resp *http.Response
+		//nolint: gosec
+		resp, err = http.Get(url)
 		if err == nil {
 			err = resp.Body.Close()
 			if err != nil {
