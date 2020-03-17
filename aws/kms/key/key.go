@@ -54,7 +54,7 @@ func (a *Key) Key(t *testing.T) *kms.KeyMetadata {
 // requires a prior call to Assert or First to "select"
 // the Key whose KeyId will be used
 func (a *Key) Policy(t *testing.T) *policy.Policy {
-	if a.Selected() == nil {
+	if a.key == nil {
 		t.Errorf("failed to call Policy() before calling, call First() or Assert()")
 		return nil
 	}
