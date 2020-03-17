@@ -10,7 +10,7 @@ type Service struct {
 	Bucket *bucket.Bucket
 }
 
-// New returns a new *Service
+// New returns a new *Service,testing update.
 func New(client client.ConfigProvider) *Service {
 	return &Service{
 		Bucket: bucket.New(client),
