@@ -160,6 +160,106 @@ func (a *Key) Description(description string) *Key {
 	return a
 }
 
+// KeyManager adds the KeyManager filter to the filter list
+// the KeyManager filter: filters keys by KeyManager where 'str' provided
+// is the expected KeyManager value
+func (a *Key) KeyManager(str string) *Key {
+	a.filters = append(a.filters, func(v interface{}) bool {
+		key := convert(v)
+		if key == nil {
+			return false
+		}
+		shared.Debugf(
+			"%s like %s -> %t\n",
+			str,
+			aws.StringValue(key.KeyManager),
+			strings.EqualFold(str, aws.StringValue(key.KeyManager)),
+		)
+		return strings.EqualFold(str, aws.StringValue(key.KeyManager))
+	})
+	return a
+}
+
+// KeyState adds the KeyState filter to the filter list
+// the KeyState filter: filters keys by KeyState where 'str' provided
+// is the expected KeyState value
+func (a *Key) KeyState(str string) *Key {
+	a.filters = append(a.filters, func(v interface{}) bool {
+		key := convert(v)
+		if key == nil {
+			return false
+		}
+		shared.Debugf(
+			"%s like %s -> %t\n",
+			str,
+			aws.StringValue(key.KeyState),
+			strings.EqualFold(str, aws.StringValue(key.KeyState)),
+		)
+		return strings.EqualFold(str, aws.StringValue(key.KeyState))
+	})
+	return a
+}
+
+// KeyUsage adds the KeyUsage filter to the filter list
+// the KeyUsage filter: filters keys by KeyUsage where 'str' provided
+// is the expected KeyUsage value
+func (a *Key) KeyUsage(str string) *Key {
+	a.filters = append(a.filters, func(v interface{}) bool {
+		key := convert(v)
+		if key == nil {
+			return false
+		}
+		shared.Debugf(
+			"%s like %s -> %t\n",
+			str,
+			aws.StringValue(key.KeyUsage),
+			strings.EqualFold(str, aws.StringValue(key.KeyUsage)),
+		)
+		return strings.EqualFold(str, aws.StringValue(key.KeyUsage))
+	})
+	return a
+}
+
+// Origin adds the Origin filter to the filter list
+// the Origin filter: filters keys by Origin where 'str' provided
+// is the expected Origin value
+func (a *Key) Origin(str string) *Key {
+	a.filters = append(a.filters, func(v interface{}) bool {
+		key := convert(v)
+		if key == nil {
+			return false
+		}
+		shared.Debugf(
+			"%s like %s -> %t\n",
+			str,
+			aws.StringValue(key.Origin),
+			strings.EqualFold(str, aws.StringValue(key.Origin)),
+		)
+		return strings.EqualFold(str, aws.StringValue(key.Origin))
+	})
+	return a
+}
+
+// Enabled adds the Enabled filter to the filter list
+// the Enabled filter: filters keys by Enabled where 'e' provided
+// is the expected Enabled boolean value
+func (a *Key) Enabled(e bool) *Key {
+	a.filters = append(a.filters, func(v interface{}) bool {
+		key := convert(v)
+		if key == nil {
+			return false
+		}
+		shared.Debugf(
+			"%t like %t -> %t\n",
+			e,
+			aws.BoolValue(key.Enabled),
+			e == aws.BoolValue(key.Enabled),
+		)
+		return e == aws.BoolValue(key.Enabled)
+	})
+	return a
+}
+
 func (a *Key) filter(keys []*kms.KeyMetadata) ([]*kms.KeyMetadata, error) {
 	if len(keys) == 0 {
 		var err error
