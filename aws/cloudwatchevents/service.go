@@ -1,3 +1,4 @@
+// Package cloudwatchevents provides functions and filters to test AWS CloudWatch Event resources
 package cloudwatchevents
 
 import (
