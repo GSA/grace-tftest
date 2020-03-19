@@ -7,7 +7,11 @@ import (
 )
 
 func TestRun(t *testing.T) {
-	err := tester.Run(".", nil, nil)
+	err := tester.Run(&tester.Config{
+		Dir:        ".",
+		Env:        map[string]string{"TFTEST_DEBUG": "true"},
+		JobsPerCPU: 1,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
