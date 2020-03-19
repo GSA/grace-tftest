@@ -3,6 +3,7 @@ package tester
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -11,60 +12,121 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"sync"
+	"syscall"
 	"time"
 )
+
+type Config struct {
+	Dir        string
+	Env        map[string]string
+	vars       []string
+	Services   []string
+	JobsPerCPU int
+}
 
 // Run enumerates over each subfolder in the provided directory
 // stubs out a provider.tf with a fully populated aws provider with the
 // provided services or by default it will add all known services then
 // executes the first file ending in _test.go against moto_server on the
 // first available port
-func Run(dir string, env map[string]string, services []string) error {
-	vars := mapToKeyValueSlice(mapMerge(
-		map[string]string{
-			"AWS_ACCESS_KEY_ID":     "mock_access_key",
-			"AWS_SECRET_ACCESS_KEY": "mock_secret_key",
-			"AWS_REGION":            "us-east-1",
-		},
-		env,
-	))
-
-	jobs, err := buildJobs(dir, vars)
+func Run(cfg *Config) error {
+	err := prepareConfig(cfg)
 	if err != nil {
 		return err
 	}
 
-	wg := &sync.WaitGroup{}
-
-	for _, j := range jobs {
-		j := j
-		wg.Add(1)
-		go func() {
-			j.Err = j.run(services)
-			wg.Done()
-		}()
+	jobs, err := buildJobs(cfg.Dir, cfg.vars)
+	if err != nil {
+		return err
 	}
 
-	wg.Wait()
+	sigch := make(chan os.Signal, 1)
+	done := make(chan struct{}, 1)
 
+	// listen for Interrupt or Termination signals
+	signal.Notify(sigch, syscall.SIGINT, syscall.SIGTERM)
+
+	// kick off jobs in a new go routine
+	go runJobs(done, cfg, jobs)
+
+	// watch for interrupt signals simultaneously
+	go func() {
+		sig := <-sigch
+		fmt.Printf("interrupt received: %v\n", sig)
+		done <- struct{}{} // trigger shutdown of app disrupting jobs
+	}()
+
+	<-done // wait for all jobs to complete
+
+	// We have either completed all jobs or
+	// an interrupt signal has been received
+	// cleanup all jobs and echo their final
+	// status output to the screen
+	fmt.Printf("\n\n\n\n===== Job Results =====\n")
 	var failed bool
 	for _, j := range jobs {
 		j.cleanup()
 		if j.Err != nil {
 			failed = true
-			fmt.Printf("[%s]: failed with error: %v\n", j.Name, j.Err)
+			fmt.Printf("%-20s%-15s%v\n", j.Name, "FAILED", j.Err)
 			continue
 		}
-		fmt.Printf("[%s]: succeeded\n", j.Name)
+		fmt.Printf("%-20s%-15s\n", j.Name, "SUCCESS")
 	}
 
 	if failed {
 		os.Exit(1)
 	}
+	return nil
+}
+
+func runJobs(done chan struct{}, cfg *Config, jobs []*job) {
+	maxProcs := runtime.NumCPU() * cfg.JobsPerCPU
+	throttle := make(chan struct{}, maxProcs)
+	wg := &sync.WaitGroup{}
+
+	for _, j := range jobs {
+		j := j
+		throttle <- struct{}{}
+		wg.Add(1)
+		go func() {
+			j.Err = j.run(cfg.Services)
+			<-throttle
+			wg.Done()
+		}()
+	}
+
+	wg.Wait()
+	done <- struct{}{} // all jobs have completed
+}
+
+func prepareConfig(cfg *Config) error {
+	if cfg == nil {
+		return errors.New("a tester.Config must be provided")
+	}
+
+	if len(cfg.Dir) == 0 {
+		cfg.Dir = "."
+	}
+
+	if cfg.JobsPerCPU <= 0 {
+		cfg.JobsPerCPU = 1
+	}
+
+	cfg.vars = mapToKeyValueSlice(mapMerge(
+		map[string]string{
+			"AWS_ACCESS_KEY_ID":     "mock_access_key",
+			"AWS_SECRET_ACCESS_KEY": "mock_secret_key",
+			"AWS_REGION":            "us-east-1",
+		},
+		cfg.Env,
+	))
+
 	return nil
 }
 
@@ -78,6 +140,7 @@ type job struct {
 	Err          error
 	Stderr       io.Writer
 	Stdout       io.Writer
+	Processes    []*exec.Cmd
 }
 
 const urlFmt = "http://localhost:%d"
@@ -85,24 +148,28 @@ const urlFmt = "http://localhost:%d"
 func (j *job) run(services []string) error {
 	port, err := getPort()
 	if err != nil {
-		return fmt.Errorf("[%s]: %v", j.Name, err)
+		return err
 	}
 	j.Env = append(j.Env, "MOTO_PORT="+strconv.Itoa(port))
 
 	moto, err := j.startProcess("moto_server", "-p", strconv.Itoa(port))
 	if err != nil {
-		return fmt.Errorf("[%s]: %v", j.Name, err)
+		return err
 	}
 	defer func() {
+		if moto.ProcessState != nil &&
+			moto.ProcessState.Exited() {
+			return
+		}
 		err = kill(moto)
 		if err != nil {
-			fmt.Printf("failed to terminate process: %v", err)
+			fmt.Printf("[%s]: failed to terminate process: %v", j.Name, err)
 		}
 	}()
 
 	err = writeProvider(j.ProviderFile, services, port)
 	if err != nil {
-		return fmt.Errorf("[%s]: %v", j.Name, err)
+		return err
 	}
 
 	fmt.Printf("[%s]: waiting for moto to start...\n", j.Name)
@@ -127,7 +194,7 @@ func (j *job) run(services []string) error {
 
 	err = j.runTerraform()
 	if err != nil {
-		return fmt.Errorf("[%s]: %v", j.Name, err)
+		return err
 	}
 
 	return j.runTest()
@@ -157,35 +224,65 @@ func (j *job) runTerraform() error {
 func (j *job) runTest() error {
 	cmd, err := j.startProcess("go", "test", "-v", j.TestFile)
 	if err != nil {
-		return fmt.Errorf("[%s]: failed to compile test: %v", j.Name, err)
+		return fmt.Errorf("failed to execute test: %v", err)
 	}
 	return cmd.Wait()
 }
 
 func (j *job) cleanup() {
-	err := retrier(100*time.Millisecond, 5, func() error {
-		return os.Remove(j.ProviderFile)
+	j.cleanupProcesses()
+
+	err := retrier(100*time.Millisecond, 10, func() error {
+		return ignoreNotExistsErr(os.Remove(j.ProviderFile))
 	})
 	if err != nil {
-		fmt.Printf("failed to cleanup: %s\n", j.ProviderFile)
+		fmt.Printf("[%s]: failed to cleanup: %s -> %v\n", j.Name, j.ProviderFile, err)
 	}
 
 	jobDir := filepath.Dir(j.ProviderFile)
 	tfstate := filepath.Join(jobDir, "terraform.tfstate")
+	tflock := filepath.Join(jobDir, ".terraform.tfstate.lock.info")
 	tfdir := filepath.Join(jobDir, ".terraform")
 
-	err = retrier(100*time.Millisecond, 5, func() error {
-		return os.Remove(tfstate)
+	err = retrier(100*time.Millisecond, 10, func() error {
+		return ignoreNotExistsErr(os.Remove(tfstate))
 	})
 	if err != nil {
-		fmt.Printf("failed to cleanup: %s\n", tfstate)
+		fmt.Printf("[%s]: failed to cleanup: %s -> %v\n", j.Name, tfstate, err)
 	}
 
-	err = retrier(100*time.Millisecond, 5, func() error {
-		return os.RemoveAll(tfdir)
+	err = retrier(100*time.Millisecond, 10, func() error {
+		return ignoreNotExistsErr(os.Remove(tflock))
 	})
 	if err != nil {
-		fmt.Printf("failed to cleanup directory: %s\n", tfdir)
+		fmt.Printf("[%s]: failed to cleanup: %s -> %v\n", j.Name, tflock, err)
+	}
+
+	err = retrier(100*time.Millisecond, 10, func() error {
+		return ignoreNotExistsErr(os.RemoveAll(tfdir))
+	})
+	if err != nil {
+		fmt.Printf("[%s]: failed to cleanup directory: %s -> %v\n", j.Name, tfdir, err)
+	}
+}
+
+func ignoreNotExistsErr(err error) error {
+	if os.IsNotExist(err) {
+		return nil
+	}
+	return err
+}
+
+func (j *job) cleanupProcesses() {
+	for _, p := range j.Processes {
+		if p.ProcessState != nil &&
+			p.ProcessState.Exited() {
+			continue
+		}
+		err := kill(p)
+		if err != nil {
+			fmt.Printf("[%s]: failed to kill process: %s -> %v\n", j.Name, p.Path, err)
+		}
 	}
 }
 
@@ -209,6 +306,9 @@ func (j *job) startProcess(path string, args ...string) (*exec.Cmd, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to start process: %s -> %v", path, err)
 	}
+
+	j.Processes = append(j.Processes, cmd)
+
 	go func() {
 		j.readOutput(stdoutP, stderrP)
 		// this will always fail as the process
@@ -317,6 +417,7 @@ func buildJobs(dir string, env []string) ([]*job, error) {
 			TestFile:     matches[0],
 			ProviderFile: filepath.Join(path, "provider.tf"),
 			Env:          env,
+			Err:          errors.New("job not executed"),
 			Stderr:       os.Stderr,
 			Stdout:       os.Stdout,
 		}
