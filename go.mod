@@ -23,7 +23,7 @@ require (
 	github.com/spf13/cobra v0.0.6 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.6.2 // indirect
-	github.com/stretchr/testify v1.5.1 // indirect
+	github.com/stretchr/testify v1.5.1
 	golang.org/x/sys v0.0.0-20200316202146-9a0dfc3c5568 // indirect
 	golang.org/x/tools v0.0.0-20200316182129-bd88ce97550a // indirect
 	gopkg.in/ini.v1 v1.55.0 // indirect
