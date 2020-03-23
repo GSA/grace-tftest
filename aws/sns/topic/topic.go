@@ -25,12 +25,12 @@ type Attributes struct {
 	Policy                  string
 	DeliveryPolicy          string
 	Owner                   string
-	SubscriptionsPending    int64
+	SubscriptionsPending    string
 	TopicArn                string
 	EffectiveDeliveryPolicy string
-	SubscriptionsConfirmed  int64
+	SubscriptionsConfirmed  string
 	DisplayName             string
-	SubscriptionsDeleted    int64
+	SubscriptionsDeleted    string
 	KmsMasterKeyID          string `json:"KmsMasterKeyId"`
 }
 
@@ -210,7 +210,7 @@ func (r *Topic) topics() ([]*Attributes, error) {
 		return nil, err
 	}
 
-	attributes := make([]*Attributes, 0, len(topics))
+	attributes := make([]*Attributes, len(topics))
 	for i, t := range topics {
 		resp, err := svc.GetTopicAttributes(&sns.GetTopicAttributesInput{TopicArn: t.TopicArn})
 		if err != nil {
@@ -233,7 +233,7 @@ func unmarshal(m map[string]*string) (*Attributes, error) {
 	}
 
 	var a *Attributes
-	err = json.Unmarshal(b, a)
+	err = json.Unmarshal(b, &a)
 	if err != nil {
 		return nil, err
 	}

@@ -286,7 +286,7 @@ func (a *Key) keys() ([]*kms.KeyMetadata, error) {
 	if err != nil {
 		return nil, err
 	}
-	keys := make([]*kms.KeyMetadata, 0, len(entries))
+	keys := make([]*kms.KeyMetadata, len(entries))
 	for i, k := range entries {
 		input := kms.DescribeKeyInput{KeyId: k.KeyId}
 		resp, err := svc.DescribeKey(&input)
