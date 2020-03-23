@@ -8,6 +8,7 @@ import (
 	"github.com/GSA/grace-tftest/aws/s3/bucket/encryption"
 	"github.com/GSA/grace-tftest/aws/s3/bucket/lifecycle"
 	"github.com/GSA/grace-tftest/aws/s3/bucket/notification"
+	"github.com/GSA/grace-tftest/aws/s3/bucket/policy"
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
