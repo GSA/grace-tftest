@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/GSA/grace-tftest/aws/iam/policy"
 	"github.com/GSA/grace-tftest/aws/s3/bucket/encryption"
 	"github.com/GSA/grace-tftest/aws/s3/bucket/lifecycle"
 	"github.com/GSA/grace-tftest/aws/s3/bucket/notification"
@@ -43,6 +44,12 @@ func (b *Bucket) Encryption() *encryption.Encryption {
 // instantiated with the current bucket name set by calling Name()
 func (b *Bucket) Lifecycle() *lifecycle.Lifecycle {
 	return lifecycle.New(b.client, b.name)
+}
+
+// Policy returns a new *policy.Policy
+// instantiated with the current bucket name set by calling Name()
+func (b *Bucket) Policy() *policy.Policy {
+	return policy.New(b.client, b.name)
 }
 
 // Assert executes the checker method (normally s3.Head)
