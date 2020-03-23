@@ -36,6 +36,9 @@ func (p *Policy) Statement(t *testing.T, doc *policy.Document) *statement.Statem
 	return statement.New(doc)
 }
 
+// document function that take a bucket policy and parses it.  Its important to make sure
+// that you understand that Policy only returns on Policy per bucket.  If bucket policy is nil
+// Unmarshal will define a policy for the statement.
 func (p *Policy) document() (*policy.Document, error) {
 	svc := s3.New(p.client)
 	out, err := svc.GetBucketPolicy(&s3.GetBucketPolicyInput{Bucket: aws.String(p.name)})
