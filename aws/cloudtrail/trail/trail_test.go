@@ -25,7 +25,6 @@ func TestTrail(t *testing.T) {
 			S3BucketName:               aws.String("g"),
 			S3KeyPrefix:                aws.String("h"),
 			SnsTopicARN:                aws.String("i"),
-			SnsTopicName:               aws.String("j"),
 		},
 	}
 	trail := New(nil).TrailARN("a").ARN("a").Name("b").KmsKeyID("c").
@@ -33,7 +32,7 @@ func TestTrail(t *testing.T) {
 		HasCustomEventSelectors(false).HasInsightSelectors(false).HomeRegion("f").
 		IncludeGlobalServiceEvents(false).IsMultiRegionTrail(false).
 		IsOrganizationTrail(false).LogFileValidationEnabled(false).
-		S3BucketName("g").S3KeyPrefix("h").SnsTopicARN("i").SnsTopicName("j").
+		S3BucketName("g").S3KeyPrefix("h").SnsTopicARN("i").
 		Assert(t, trails...)
 	if trail == nil {
 		t.Error("trail should not be nil")

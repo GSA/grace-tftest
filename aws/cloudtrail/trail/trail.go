@@ -224,26 +224,6 @@ func (r *Trail) SnsTopicARN(arn string) *Trail {
 	return r
 }
 
-// SnsTopicName adds the SnsTopicName filter to the filter list
-// the SnsTopicName filter: filters trails by SnsTopicName where 'name' provided
-// is the expected SnsTopicName value
-func (r *Trail) SnsTopicName(name string) *Trail {
-	r.filters = append(r.filters, func(v interface{}) bool {
-		trail := convert(v)
-		if trail == nil {
-			return false
-		}
-		shared.Debugf(
-			"%s like %s -> %t\n",
-			name,
-			aws.StringValue(trail.SnsTopicName),
-			strings.EqualFold(name, aws.StringValue(trail.SnsTopicName)),
-		)
-		return strings.EqualFold(name, aws.StringValue(trail.SnsTopicName))
-	})
-	return r
-}
-
 // KmsKeyID adds the KmsKeyID filter to the filter list
 // the KmsKeyID filter: filters trails by KmsKeyId where 'id' provided
 // is the expected KmsKeyId value
