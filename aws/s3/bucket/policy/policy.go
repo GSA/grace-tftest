@@ -1,69 +1,50 @@
 package policy
 
 import (
-	 "testing"
-	
-	"github.com/GRACE/grace-tftest/aws/shared"
+	"testing"
+
+	"github.com/GSA/grace-tftest/aws/shared/policy"
+	"github.com/GSA/grace-tftest/aws/shared/policy/statement"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-// Policy: Contains the necessary properties for testing *s3.Policy objects
+// Policy contains the necessary properties for testing *policy.Document objects
 type Policy struct {
-	filters []shared.Filter
-	client  client.ConfigProvider
-	name    string
-	policy  *string
+	client client.ConfigProvider
+	name   string
 }
 
-// New:  Returns a new *Policy type 
+// New returns a new *Policy
 func New(client client.ConfigProvider, name string) *Policy {
-	return &Policy{
-		client: client,
-		name:   name,
-	}
-}
-
-// Selected returns the currently selected *s3.Bucket Policy 
-func (p *Policy) Selected() *s3.GetBucketPolicy(&s3.GetBucketPolicyInput{
-	Bucket: *Policy.name
-}) 
-{
-	return p.policy
+	return &Policy{client: client, name: name}
 }
 
 // Statement returns a newly instantiated *statement.Statement object
-// this is used for filtering by statements inside a policy. If doc is nil
-// the default policy document will be retrieved from AWS
+// this is used for filtering all of the statements in all of the policies
+// related to the kms key. If doc is nil, the policies will be queried from AWS
 func (p *Policy) Statement(t *testing.T, doc *policy.Document) *statement.Statement {
 	if doc == nil {
-		doc = p.Document(t, "")
+		var err error
+		doc, err = p.document()
+		if err != nil {
+			t.Errorf("failed to query statements: %v", err)
+			return nil
+		}
 	}
 	return statement.New(doc)
 }
 
-// Assert applies all filters that have been called, resets the list of filters,
-// fails the test if there is not exactly one match, and stores the matched policy
-// if policies is not provided, *iam.Policy objects will be retreived from AWS
-func (p *Policy) Assert(t *testing.T, policies ...*string) *Policy {
-	var err error
-	policies, err = p.filter(policies)
+func (p *Policy) document() (*policy.Document, error) {
+	svc := s3.New(p.client)
+	out, err := svc.GetBucketPolicy(&s3.GetBucketPolicyInput{Bucket: aws.String(p.name)})
 	if err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
-
-	switch l := len(policies); {
-	case l == 0:
-		t.Fatal("no matching policy was found")
-	case l > 1:
-		t.Fatal("more than one matching policy was found")
-	default:
-		p.policy = policies[0]
+	doc, err := policy.Unmarshal(aws.StringValue(out.Policy))
+	if err != nil {
+		return nil, err
 	}
-
-	p.filters = []shared.Filter{}
-	return p
+	return doc, nil
 }
-
-
-
