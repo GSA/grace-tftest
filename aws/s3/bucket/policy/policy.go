@@ -1,3 +1,6 @@
+// Package Policy  provides types and functions for breaking down
+// S3 Buucket policies which allows the filter actions to take place.
+
 package policy
 
 import (

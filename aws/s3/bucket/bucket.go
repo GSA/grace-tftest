@@ -1,10 +1,12 @@
+// Package s3 Bucket provides types and functions for filtering AWS
+// S3 Buuckets
+
 package bucket
 
 import (
 	"errors"
 	"testing"
 
-	"github.com/GSA/grace-tftest/aws/iam/policy"
 	"github.com/GSA/grace-tftest/aws/s3/bucket/encryption"
 	"github.com/GSA/grace-tftest/aws/s3/bucket/lifecycle"
 	"github.com/GSA/grace-tftest/aws/s3/bucket/notification"
