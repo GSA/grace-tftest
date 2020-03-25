@@ -1,3 +1,6 @@
+// Package s3 Bucket provides types and functions for filtering AWS
+// S3 Buuckets
+
 package bucket
 
 import (
@@ -7,6 +10,7 @@ import (
 	"github.com/GSA/grace-tftest/aws/s3/bucket/encryption"
 	"github.com/GSA/grace-tftest/aws/s3/bucket/lifecycle"
 	"github.com/GSA/grace-tftest/aws/s3/bucket/notification"
+	"github.com/GSA/grace-tftest/aws/s3/bucket/policy"
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
@@ -43,6 +47,12 @@ func (b *Bucket) Encryption() *encryption.Encryption {
 // instantiated with the current bucket name set by calling Name()
 func (b *Bucket) Lifecycle() *lifecycle.Lifecycle {
 	return lifecycle.New(b.client, b.name)
+}
+
+// Policy returns a new *policy.Policy
+// instantiated with the current bucket name set by calling Name()
+func (b *Bucket) Policy() *policy.Policy {
+	return policy.New(b.client, b.name)
 }
 
 // Assert executes the checker method (normally s3.Head)
