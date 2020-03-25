@@ -11,6 +11,7 @@ import (
 	"github.com/GSA/grace-tftest/aws/s3/bucket/lifecycle"
 	"github.com/GSA/grace-tftest/aws/s3/bucket/notification"
 	"github.com/GSA/grace-tftest/aws/s3/bucket/policy"
+	"github.com/GSA/grace-tftest/aws/s3/bucket/pubaccblk"
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
@@ -53,6 +54,12 @@ func (b *Bucket) Lifecycle() *lifecycle.Lifecycle {
 // instantiated with the current bucket name set by calling Name()
 func (b *Bucket) Policy() *policy.Policy {
 	return policy.New(b.client, b.name)
+}
+
+// PublicAccessBlock returns a new *pubaccblk.PublicAccessBlock
+// instantiated with the current bucket name set by calling Name()
+func (b *Bucket) PublicAccessBlock() *pubaccblk.PublicAccessBlock {
+	return pubaccblk.New(b.client, b.name)
 }
 
 // Assert executes the checker method (normally s3.Head)
