@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/GSA/grace-tftest/aws/shared"
+	"github.com/GSA/grace-tftest/aws/sns/topic/policy"
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/sns"
 )
@@ -37,6 +38,12 @@ type Attributes struct {
 // New returns a new *Topic
 func New(client client.ConfigProvider) *Topic {
 	return &Topic{client: client}
+}
+
+// Policy returns a new *policy.Policy
+// instantiated with the current bucket name set by calling Name()
+func (r *Topic) Policy() *policy.Policy {
+	return policy.New(r.topic.Policy)
 }
 
 // Selected returns the currently selected *Attributes
