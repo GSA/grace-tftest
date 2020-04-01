@@ -1,3 +1,4 @@
+// Package metricfilter contains the necessary properties for testing *cloudwatchlogs.MetricFilter objects
 package metricfilter
 
 import (
