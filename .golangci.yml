@@ -15,6 +15,9 @@ run:
   # include test files or not, default is true
   tests: true
 
+  # include integration tests
+  build-tags:
+    - integration
 
 # output configuration options
 output:
@@ -103,45 +106,22 @@ linters-settings:
     for-loops: false # Report preallocation suggestions on for loops, false by default
 
 linters:
-  disable-all: true
-  enable:
-    - bodyclose
-    - deadcode
-    - depguard
-    - dogsled
-    - dupl
-    - errcheck
-    - funlen
-    - gocognit
-    - goconst
-    - gocritic
-    - gocyclo
-    - godox
-    - gofmt
-    - goimports
-    - golint
-    - goprintffuncname
-    - gosec
-    - gosimple
-    - govet
-    - ineffassign
-    - interfacer
-    - lll
-    - maligned
-    - misspell
-    - nakedret
+  enable-all: true
+  disable:
+    - gochecknoinits
+    - gochecknoglobals
+    - wsl
     - prealloc
-    - rowserrcheck
-    - scopelint
-    - staticcheck
-    - structcheck
-    - stylecheck
-    - typecheck
-    - unconvert
-    - unparam
-    - unused
-    - varcheck
-    - whitespace
+    - gomnd
+    - goerr113
+    - godot
+    - testpackage
+    - gci
+    - exhaustivestruct
+    - wrapcheck
+    - nlreturn
+    - gofumpt
+    - noctx
   fast: false
 
   # Independently from option `exclude` we use default exclude patterns,

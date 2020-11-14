@@ -28,7 +28,7 @@ type Principal struct {
 	Values []string
 }
 
-//Condition ... holds an AWS policy condition
+// Condition ... holds an AWS policy condition
 type Condition struct {
 	Operator string
 	Property string
@@ -39,11 +39,11 @@ type Condition struct {
 func Unmarshal(raw string) (*Document, error) {
 	data, err := url.QueryUnescape(raw)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unescape Policy Document: %v", err)
+		return nil, fmt.Errorf("failed to unescape Policy Document: %w", err)
 	}
 	pdoc, err := parsePolicy([]byte(data))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse policy document: %v", err)
+		return nil, fmt.Errorf("failed to parse policy document: %w", err)
 	}
 	return pdoc, nil
 }
@@ -87,7 +87,7 @@ func parseStatement(doc *Document, m map[string]interface{}) error {
 		if val, ok := m[field]; ok {
 			err := fn(statement, val)
 			if err != nil {
-				return fmt.Errorf("failed to set field %s: %v", field, err)
+				return fmt.Errorf("failed to set field %s: %w", field, err)
 			}
 		}
 	}

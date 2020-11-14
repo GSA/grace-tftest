@@ -12,7 +12,7 @@ lint:	dependencies
 dependencies: precommit go.sum $(GOLANGCILINT)
 
 $(GOLANGCILINT):
-	go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+	go get github.com/golangci/golangci-lint/cmd/golangci-lint
 
 go.sum: go.mod
 	go mod tidy

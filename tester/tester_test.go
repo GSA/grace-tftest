@@ -2,6 +2,7 @@ package tester
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -130,7 +131,8 @@ func TestStartProcess(t *testing.T) {
 			}
 			err = p.Wait()
 			if err != nil {
-				if xerr, ok := err.(*exec.ExitError); ok {
+				var xerr *exec.ExitError
+				if errors.As(err, &xerr) {
 					if xerr.ExitCode() != tc.expectedExitCode {
 						t.Fatalf("exit code invalid, expected: %d, got: %d", tc.expectedExitCode, xerr.ExitCode())
 					}
@@ -193,7 +195,8 @@ func TestStartProcessGoTest(t *testing.T) {
 			}
 			err = p.Wait()
 			if err != nil {
-				if xerr, ok := err.(*exec.ExitError); ok {
+				var xerr *exec.ExitError
+				if errors.As(err, &xerr) {
 					if xerr.ExitCode() != tc.expectedExitCode {
 						t.Fatalf("exit code invalid, expected: %d, got: %d", tc.expectedExitCode, xerr.ExitCode())
 					}

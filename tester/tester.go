@@ -225,11 +225,11 @@ func (j *job) startMoto(port int) (func(), error) {
 	maxRetries := 20
 	for i := 0; i < maxRetries; i++ {
 		time.Sleep(1 * time.Second)
-		//we own all variables related to this url variable
+		// we own all variables related to this url variable
 		url := fmt.Sprintf(urlFmt, port)
 
 		var resp *http.Response
-		//nolint: gosec
+		// nolint: gosec
 		resp, err := http.Get(url)
 		if err == nil {
 			err = resp.Body.Close()
@@ -258,20 +258,20 @@ func (j *job) startMoto(port int) (func(), error) {
 func (j *job) runTerraform() error {
 	init, err := j.startProcess("terraform", "init", "-no-color")
 	if err != nil {
-		return fmt.Errorf("failed to initialize terraform: %v", err)
+		return fmt.Errorf("failed to initialize terraform: %w", err)
 	}
 	err = init.Wait()
 	if err != nil {
-		return fmt.Errorf("failed to wait for terraform initialization: %v", err)
+		return fmt.Errorf("failed to wait for terraform initialization: %w", err)
 	}
 
 	apply, err := j.startProcess("terraform", "apply", "-auto-approve", "-no-color")
 	if err != nil {
-		return fmt.Errorf("failed to apply terraform: %v", err)
+		return fmt.Errorf("failed to apply terraform: %w", err)
 	}
 	err = apply.Wait()
 	if err != nil {
-		return fmt.Errorf("failed to wait for terraform apply: %v", err)
+		return fmt.Errorf("failed to wait for terraform apply: %w", err)
 	}
 	return err
 }
@@ -279,7 +279,7 @@ func (j *job) runTerraform() error {
 func (j *job) runTest() error {
 	cmd, err := j.startProcess("go", "test", "-v", j.TestFile)
 	if err != nil {
-		return fmt.Errorf("failed to execute test: %v", err)
+		return fmt.Errorf("failed to execute test: %w", err)
 	}
 	return cmd.Wait()
 }
@@ -346,16 +346,16 @@ func (j *job) startProcess(path string, args ...string) (*exec.Cmd, error) {
 	// which message belongs to which job
 	stdoutP, err := cmd.StdoutPipe()
 	if err != nil {
-		return nil, fmt.Errorf("failed to open stdout pipe: %v", err)
+		return nil, fmt.Errorf("failed to open stdout pipe: %w", err)
 	}
 	stderrP, err := cmd.StderrPipe()
 	if err != nil {
-		return nil, fmt.Errorf("failed to open stdout pipe: %v", err)
+		return nil, fmt.Errorf("failed to open stdout pipe: %w", err)
 	}
 
 	err = cmd.Start()
 	if err != nil {
-		return nil, fmt.Errorf("failed to start process: %s -> %v", path, err)
+		return nil, fmt.Errorf("failed to start process: %s -> %w", path, err)
 	}
 
 	// keep up with what processes we have started
@@ -392,10 +392,10 @@ func (j *job) readOutput(stdout, stderr io.Reader) error {
 
 	// if something goes wrong return the error to the caller
 	if err := stdoutScanner.Err(); err != nil {
-		return fmt.Errorf("stdoutScanner failed: %v", err)
+		return fmt.Errorf("stdoutScanner failed: %w", err)
 	}
 	if err := stderrScanner.Err(); err != nil {
-		return fmt.Errorf("stderrScanner failed: %v", err)
+		return fmt.Errorf("stderrScanner failed: %w", err)
 	}
 
 	return nil
@@ -463,7 +463,7 @@ func buildJobs(dir string, env []string) ([]*job, error) {
 	// user provided directory
 	base, err := filepath.Abs(dir)
 	if err != nil {
-		return nil, fmt.Errorf("failed to resolve absolute path to %s -> %v", dir, err)
+		return nil, fmt.Errorf("failed to resolve absolute path to %s -> %w", dir, err)
 	}
 
 	var jobs []*job
@@ -471,7 +471,7 @@ func buildJobs(dir string, env []string) ([]*job, error) {
 	// walk the directory tree for the absolute path
 	err = filepath.Walk(base, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return fmt.Errorf("failed to access path: %q -> %v", path, err)
+			return fmt.Errorf("failed to access path: %q -> %w", path, err)
 		}
 		// if it is not a directory or it is the current
 		// directory, then skip it
@@ -484,7 +484,7 @@ func buildJobs(dir string, env []string) ([]*job, error) {
 		pattern := filepath.Join(path, "*_test.go")
 		matches, err := filepath.Glob(pattern)
 		if err != nil {
-			return fmt.Errorf("failed to list files in: %q -> %v", path, err)
+			return fmt.Errorf("failed to list files in: %q -> %w", path, err)
 		}
 
 		// if no _test.go files were found then
@@ -562,7 +562,7 @@ func writeProvider(path string, services []string, port int) error {
 	}
 	err = ioutil.WriteFile(path, data, 0600)
 	if err != nil {
-		return fmt.Errorf("failed to write provider at: %q -> %v", path, err)
+		return fmt.Errorf("failed to write provider at: %q -> %w", path, err)
 	}
 	return nil
 }
@@ -599,7 +599,7 @@ var defaultServices = []string{
 	"codecommit",
 	"codedeploy",
 	"codepipeline",
-	//"codestarnotifications", doesn't work
+	// "codestarnotifications", doesn't work
 	"cognitoidentity",
 	"cognitoidp",
 	"configservice",
@@ -727,7 +727,7 @@ provider "aws" {
 	// create a new template and parse the data
 	t, err := template.New("provider").Parse(tmpl)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse template string: %v", err)
+		return nil, fmt.Errorf("failed to parse template string: %w", err)
 	}
 
 	// execute the template against a buffer so
@@ -735,7 +735,7 @@ provider "aws" {
 	var byt bytes.Buffer
 	err = t.Execute(&byt, serviceList)
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute template string: %v", err)
+		return nil, fmt.Errorf("failed to execute template string: %w", err)
 	}
 
 	return byt.Bytes(), nil

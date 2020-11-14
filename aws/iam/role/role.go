@@ -56,7 +56,7 @@ func (r *Role) Inlined(t *testing.T, doc *policy.Document) *statement.Statement 
 	if doc == nil {
 		statements, err := r.inlined()
 		if err != nil {
-			t.Errorf("failed to query inlined policies: %v", err)
+			t.Errorf("failed to query inlined policies: %w", err)
 			return nil
 		}
 		doc = &policy.Document{Statement: statements}
@@ -125,7 +125,7 @@ func (r *Role) Arn(arn string) *Role {
 func (r *Role) Document(t *testing.T) *policy.Document {
 	doc, err := policy.Unmarshal(aws.StringValue(r.role.AssumeRolePolicyDocument))
 	if err != nil {
-		t.Errorf("failed to unmarshal policy document: %v", err)
+		t.Errorf("failed to unmarshal policy document: %w", err)
 		return nil
 	}
 	return doc
@@ -215,11 +215,11 @@ func (r *Role) inlined() ([]*policy.Statement, error) {
 			PolicyName: n,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("failed to get inline policy for role: %s -> %v", aws.StringValue(r.role.RoleName), err)
+			return nil, fmt.Errorf("failed to get inline policy for role: %s -> %w", aws.StringValue(r.role.RoleName), err)
 		}
 		doc, err := policy.Unmarshal(aws.StringValue(out.PolicyDocument))
 		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal inline policy document for role: %s -> %v", aws.StringValue(r.role.RoleName), err)
+			return nil, fmt.Errorf("failed to unmarshal inline policy document for role: %s -> %w", aws.StringValue(r.role.RoleName), err)
 		}
 		statements = append(statements, doc.Statement...)
 	}
